@@ -1,0 +1,35 @@
+{
+  "model": "v5",
+  "scores": {
+    "conservative": 5,
+    "balanced": 5,
+    "aggressive": 5
+  },
+  "winner": "conservative",
+  "results": {
+    "conservative": {
+      "iv_invariant": true,
+      "sniper_profit": true,
+      "holder_90d": true,
+      "dump_stress": true,
+      "nobody_loses": false,
+      "creator_earnings": true
+    },
+    "balanced": {
+      "iv_invariant": true,
+      "sniper_profit": true,
+      "holder_90d": true,
+      "dump_stress": true,
+      "nobody_loses": false,
+      "creator_earnings": true
+    },
+    "aggressive": {
+      "iv_invariant": true,
+      "sniper_profit": true,
+      "holder_90d": true,
+      "dump_stress": true,
+      "nobody_loses": false,
+      "creator_earnings": true
+    }
+  }
+}
