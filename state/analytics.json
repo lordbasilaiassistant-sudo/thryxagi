@@ -1,0 +1,6 @@
+[
+  {"ticker": "OBSD", "address": "0x291AaF4729BaB2528B08d8fE248272b208Ce84FF", "chain": "base", "volume24h": 6.59, "price": 0.0000000543, "fdv": 54, "txns24h": 51, "lastPulled": "2026-03-06"},
+  {"ticker": "ABOSS", "address": "0xC51584C203F48bb84716CDF8F46D336113045bA3", "chain": "base", "volume24h": 0, "price": null, "fdv": null, "txns24h": 0, "lastPulled": "2026-03-06"},
+  {"ticker": "VIBE", "address": "0xBef03d2dE6882aA150f8Fd50E9E0C98193499ba3", "chain": "base", "volume24h": 0, "price": null, "fdv": null, "txns24h": 0, "lastPulled": "2026-03-06"},
+  {"ticker": "THINK", "address": "F5Rvry9m2DJXq1jWSMsLujEVLzcxKEMQXAgha7srpump", "chain": "solana", "volume24h": 0, "price": null, "fdv": null, "txns24h": 0, "lastPulled": "2026-03-06"}
+]

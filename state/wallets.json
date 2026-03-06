@@ -1,0 +1,10 @@
+{
+  "primary": {
+    "address": "0x7a3E312Ec6e20a9F62fE2405938EB9060312E334",
+    "envVar": "THRYXTREASURY_PRIVATE_KEY",
+    "bankrDeploys": 13,
+    "pumpfunAccount": "thryx"
+  },
+  "rotation": [],
+  "agents": {}
+}
