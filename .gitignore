@@ -4,6 +4,7 @@ cache/
 
 # Dependencies
 lib/
+!scripts/lib/
 node_modules/
 
 # Broadcast artifacts (contain deployer addresses, tx hashes — safe but noisy)
