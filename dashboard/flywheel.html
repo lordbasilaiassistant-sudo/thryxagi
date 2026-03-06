@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBSD Ecosystem Flywheel — THRYXAGI</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #06060c;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  h1 {
+    text-align: center;
+    padding: 24px 20px 4px;
+    font-size: 1.7rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #00ffcc, #7b61ff, #ff6b9d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 1px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #555;
+    font-size: 0.78rem;
+    margin-bottom: 8px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+  }
+  .tagline {
+    text-align: center;
+    color: #3a3a4a;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  canvas { display: block; margin: 0 auto; }
+
+  /* Metrics bar */
+  .metrics {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin: 16px auto 8px;
+    flex-wrap: wrap;
+  }
+  .metric {
+    text-align: center;
+    padding: 10px 18px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+    min-width: 160px;
+  }
+  .metric-label {
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #555;
+    margin-bottom: 4px;
+  }
+  .metric-value {
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  /* Legend */
+  .legend {
+    max-width: 680px;
+    margin: 16px auto 32px;
+    padding: 18px 24px;
+    background: rgba(255,255,255,0.015);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+  }
+  .legend h3 {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #444;
+    margin-bottom: 10px;
+  }
+  .legend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px 28px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.68rem;
+  }
+  .legend-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-label { color: #888; }
+  .legend-addr {
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #555;
+    font-size: 0.62rem;
+  }
+  .legend-divider {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: rgba(255,255,255,0.04);
+    margin: 4px 0;
+  }
+  .legend-note {
+    grid-column: 1 / -1;
+    font-size: 0.6rem;
+    color: #444;
+    font-style: italic;
+    margin-top: 2px;
+  }
+</style>
+</head>
+<body>
+
+<h1>OBSD Ecosystem Flywheel</h1>
+<p class="subtitle">THRYXAGI</p>
+<p class="tagline">CLOSED LOOP -- ZERO LEAKS -- EVERY ETH BACKS IV OR RECYCLES INTO OBSD</p>
+
+<canvas id="flywheel" width="800" height="800"></canvas>
+
+<div class="metrics">
+  <div class="metric">
+    <div class="metric-label">Every Buy</div>
+    <div class="metric-value" style="color:#ff5050;">Supply Burns (Deflationary)</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Every Sell</div>
+    <div class="metric-value" style="color:#ffc837;">IV Rises (Floor Goes Up)</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Every Child Launch</div>
+    <div class="metric-value" style="color:#00ffcc;">OBSD Demand Increases</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Every Fee Compound</div>
+    <div class="metric-value" style="color:#7b61ff;">Restocks OBSD for Launches</div>
+  </div>
+</div>
+
+<div class="legend">
+  <h3>Contract Addresses (Base Mainnet)</h3>
+  <div class="legend-grid">
+    <div class="legend-item">
+      <span class="legend-dot" style="background:#7b61ff;"></span>
+      <span class="legend-label">OBSD Token</span>
+      <span class="legend-addr">0x291AaF...Ce84FF</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot" style="background:#00ffcc;"></span>
+      <span class="legend-label">Router</span>
+      <span class="legend-addr">0x2558F3...714b0E</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot" style="background:#c864ff;"></span>
+      <span class="legend-label">Factory</span>
+      <span class="legend-addr">0xb696F6...650776</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot" style="background:#ffc837;"></span>
+      <span class="legend-label">Child Tokens</span>
+      <span class="legend-addr">5 launched</span>
+    </div>
+    <div class="legend-divider"></div>
+    <div class="legend-note">IV = Real_ETH / Circ -- mathematically guaranteed to never decrease. Every ETH backs IV or recycles.</div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('flywheel');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const CX = W/2, CY = H/2;
+
+// --- INNER LOOP (6 nodes) ---
+const innerR = 220;
+const innerNodes = [
+  { label: 'Deploy Child\nToken',        desc: 'Seeded with OBSD\nfrom treasury',   color: '#00ffcc' },
+  { label: 'Traders Buy\nChild Token',   desc: 'Must acquire OBSD\nfirst',          color: '#ff6b9d' },
+  { label: 'Buy OBSD\nvia Router',       desc: '1% fee (ETH)\n2% burn (supply)',    color: '#7b61ff' },
+  { label: 'Child Trades\non Aero Pool', desc: 'LP swap fees\nearned by us',        color: '#00c8ff' },
+  { label: 'Fees Collected',             desc: 'ETH buys MORE\nOBSD via router',    color: '#ffc837' },
+  { label: 'OBSD Restocked',             desc: 'Fund next child\ntoken launch',     color: '#c864ff' },
+];
+
+// --- OUTER LOOP (4 nodes) ---
+const outerR = 355;
+const outerAngles = [-0.55, 0.35, 1.25, 2.15];
+const outerNodes = [
+  { label: 'External Agents\n& Bots',       desc: 'Revenue-generating\nwork',       color: '#22ddaa' },
+  { label: 'Earn OBSD\nas Payroll',          desc: 'Compensation in\nOBSD tokens',   color: '#44cc88' },
+  { label: 'Hold / Trade\nOBSD',             desc: 'Adds volume to\necosystem',      color: '#66bb66' },
+  { label: 'Volume = Fees\n= More Payroll',  desc: 'Attracts more\nagents',          color: '#33ddbb' },
+];
+
+const innerAngleOff = -Math.PI / 2;
+innerNodes.forEach((n, i) => {
+  const a = innerAngleOff + (2 * Math.PI * i) / innerNodes.length;
+  n.x = CX + innerR * Math.cos(a);
+  n.y = CY + innerR * Math.sin(a);
+  n.a = a;
+});
+outerNodes.forEach((n, i) => {
+  const a = innerAngleOff + outerAngles[i];
+  n.x = CX + outerR * Math.cos(a);
+  n.y = CY + outerR * Math.sin(a);
+  n.a = a;
+});
+
+// --- PATH UTILITIES ---
+function quadBez(x1,y1, cpx,cpy, x2,y2, steps) {
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps, u = 1 - t;
+    pts.push({ x: u*u*x1 + 2*u*t*cpx + t*t*x2, y: u*u*y1 + 2*u*t*cpy + t*t*y2 });
+  }
+  return pts;
+}
+
+function arcPath(a, b, pull, steps) {
+  const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+  const dx = CX-mx, dy = CY-my;
+  const d = Math.sqrt(dx*dx+dy*dy) || 1;
+  return quadBez(a.x,a.y, mx+dx/d*pull, my+dy/d*pull, b.x,b.y, steps||40);
+}
+
+function linePath(a, b, steps) {
+  const pts = [];
+  for (let i = 0; i <= (steps||30); i++) {
+    const t = i / (steps||30);
+    pts.push({ x: a.x+(b.x-a.x)*t, y: a.y+(b.y-a.y)*t });
+  }
+  return pts;
+}
+
+function clipEnds(path, r) {
+  let s = 0, e = path.length - 1;
+  const p0 = path[0], pN = path[path.length-1];
+  for (let i = 1; i < path.length; i++) {
+    const dx = path[i].x-p0.x, dy = path[i].y-p0.y;
+    if (Math.sqrt(dx*dx+dy*dy) >= r) { s = i; break; }
+  }
+  for (let i = path.length-2; i >= 0; i--) {
+    const dx = path[i].x-pN.x, dy = path[i].y-pN.y;
+    if (Math.sqrt(dx*dx+dy*dy) >= r) { e = i; break; }
+  }
+  return path.slice(s, e+1);
+}
+
+// --- BUILD ALL PATHS ---
+const innerPaths = [], innerDrawPaths = [];
+for (let i = 0; i < innerNodes.length; i++) {
+  const a = innerNodes[i], b = innerNodes[(i+1) % innerNodes.length];
+  const full = arcPath(a, b, 30);
+  innerPaths.push(full);
+  innerDrawPaths.push(clipEnds(full, 48));
+}
+const outerPaths = [], outerDrawPaths = [];
+for (let i = 0; i < outerNodes.length; i++) {
+  const a = outerNodes[i], b = outerNodes[(i+1) % outerNodes.length];
+  const full = arcPath(a, b, -45);
+  outerPaths.push(full);
+  outerDrawPaths.push(clipEnds(full, 40));
+}
+// Cross-links: outer -> inner and back
+const cross1Full = linePath(outerNodes[1], innerNodes[2]);
+const cross1Draw = clipEnds(cross1Full, 44);
+const cross2Full = linePath(outerNodes[2], innerNodes[3]);
+const cross2Draw = clipEnds(cross2Full, 44);
+
+// --- PARTICLES ---
+class Particle {
+  constructor(path, color, speed, offset) {
+    this.path = path;
+    this.color = color;
+    this.speed = speed;
+    this.t = offset % 1;
+    this.r = 2.5 + Math.random() * 1.5;
+  }
+  update(dt) {
+    this.t = (this.t + dt * this.speed) % 1;
+  }
+  pos() {
+    const idx = this.t * (this.path.length - 1);
+    const i = Math.floor(idx), f = idx - i;
+    const a = this.path[Math.min(i, this.path.length-1)];
+    const b = this.path[Math.min(i+1, this.path.length-1)];
+    return { x: a.x + (b.x-a.x)*f, y: a.y + (b.y-a.y)*f };
+  }
+  draw() {
+    const p = this.pos();
+    const fade = Math.sin(this.t * Math.PI);
+    ctx.globalAlpha = 0.25 + 0.75 * fade;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, this.r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+}
+
+const particles = [];
+// Inner loop: 3 particles per edge
+innerPaths.forEach((p, i) => {
+  for (let j = 0; j < 3; j++)
+    particles.push(new Particle(p, innerNodes[i].color, 0.22 + Math.random()*0.06, j/3));
+});
+// Outer loop: 2 per edge
+outerPaths.forEach((p, i) => {
+  for (let j = 0; j < 2; j++)
+    particles.push(new Particle(p, outerNodes[i].color, 0.16 + Math.random()*0.05, j/2));
+});
+// Cross links
+for (let j = 0; j < 2; j++) {
+  particles.push(new Particle(cross1Full, '#44cc88', 0.18, j*0.5));
+  particles.push(new Particle(cross2Full, '#66bb66', 0.18, j*0.5 + 0.25));
+}
+
+// --- DRAW HELPERS ---
+function strokePath(path, color, alpha) {
+  if (path.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(path[0].x, path[0].y);
+  for (let i = 1; i < path.length; i++) ctx.lineTo(path[i].x, path[i].y);
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = alpha;
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  // Arrowhead
+  const tip = path[path.length-1];
+  const prev = path[Math.max(path.length-4, 0)];
+  const dx = tip.x-prev.x, dy = tip.y-prev.y;
+  const d = Math.sqrt(dx*dx+dy*dy)||1;
+  const ux = dx/d, uy = dy/d, sz = 7;
+  ctx.beginPath();
+  ctx.moveTo(tip.x, tip.y);
+  ctx.lineTo(tip.x-ux*sz+uy*sz*0.45, tip.y-uy*sz-ux*sz*0.45);
+  ctx.lineTo(tip.x-ux*sz-uy*sz*0.45, tip.y-uy*sz+ux*sz*0.45);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.globalAlpha = alpha + 0.15;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+function drawNode(n, r) {
+  // Pulse ring
+  const pulse = 0.08 + 0.04 * Math.sin(Date.now()/700 + n.a*2);
+  ctx.beginPath();
+  ctx.arc(n.x, n.y, r+5, 0, Math.PI*2);
+  ctx.strokeStyle = n.color;
+  ctx.globalAlpha = pulse;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  // BG
+  ctx.beginPath();
+  ctx.arc(n.x, n.y, r, 0, Math.PI*2);
+  const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, r);
+  g.addColorStop(0, '#12121c');
+  g.addColorStop(1, '#0a0a10');
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = n.color;
+  ctx.globalAlpha = 0.3;
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  // Label
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = n.color;
+  ctx.font = 'bold 10px "Segoe UI", system-ui, sans-serif';
+  const lines = n.label.split('\n');
+  const lh = 12;
+  lines.forEach((l, i) => ctx.fillText(l, n.x, n.y - (lines.length-1)*lh/2 + i*lh));
+  // Desc outside
+  if (n.desc) {
+    ctx.font = '8px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#4a4a5a';
+    const dl = n.desc.split('\n');
+    dl.forEach((l, i) => ctx.fillText(l, n.x, n.y + r + 12 + i*10));
+  }
+}
+
+function drawCenter(t) {
+  const s = 0.85 + 0.15 * Math.sin(t/1000);
+  const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, 75*s);
+  g.addColorStop(0, 'rgba(123,97,255,0.13)');
+  g.addColorStop(0.6, 'rgba(123,97,255,0.03)');
+  g.addColorStop(1, 'transparent');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(CX, CY, 75*s, 0, Math.PI*2); ctx.fill();
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(123,97,255,0.5)'; ctx.shadowBlur = 16;
+  ctx.fillStyle = '#7b61ff';
+  ctx.font = 'bold 24px "Segoe UI", system-ui, sans-serif';
+  ctx.fillText('OBSD', CX, CY - 10);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#444'; ctx.font = '10px "Segoe UI", system-ui, sans-serif';
+  ctx.fillText('Obsidian', CX, CY + 8);
+  ctx.fillStyle = '#2a2a3a'; ctx.font = 'bold 7px "Segoe UI", system-ui, sans-serif';
+  ctx.fillText('CLOSED LOOP', CX, CY + 22);
+}
+
+// --- ANIMATION ---
+let last = 0;
+function frame(now) {
+  const dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  ctx.clearRect(0, 0, W, H);
+
+  // BG
+  const bg = ctx.createRadialGradient(CX, CY, 0, CX, CY, 420);
+  bg.addColorStop(0, '#0c0c16');
+  bg.addColorStop(1, '#06060c');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Loop labels
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#7b61ff'; ctx.globalAlpha = 0.4;
+  ctx.font = 'bold 9px "Segoe UI", system-ui, sans-serif';
+  ctx.fillText('INNER LOOP: TOKEN FLYWHEEL', CX, CY - innerR - 52);
+  ctx.fillStyle = '#22ddaa';
+  ctx.fillText('OUTER LOOP: AGENT ECONOMY', CX, CY - outerR - 14);
+  ctx.globalAlpha = 1;
+
+  // Draw paths
+  innerDrawPaths.forEach((p, i) => strokePath(p, innerNodes[i].color, 0.1));
+  outerDrawPaths.forEach((p, i) => strokePath(p, outerNodes[i].color, 0.07));
+  strokePath(cross1Draw, '#44cc88', 0.06);
+  strokePath(cross2Draw, '#66bb66', 0.06);
+
+  // Cross-link labels
+  ctx.font = '7px "Segoe UI", system-ui, sans-serif';
+  ctx.textAlign = 'center'; ctx.fillStyle = '#2a3a3a';
+  const m1 = cross1Full[Math.floor(cross1Full.length/2)];
+  ctx.fillText('payroll feeds volume', m1.x - 18, m1.y - 4);
+  const m2 = cross2Full[Math.floor(cross2Full.length/2)];
+  ctx.fillText('volume feeds fees', m2.x + 18, m2.y - 4);
+
+  // Particles
+  particles.forEach(p => { p.update(dt); p.draw(); });
+
+  // Center
+  drawCenter(now);
+
+  // Nodes
+  innerNodes.forEach(n => drawNode(n, 40));
+  outerNodes.forEach(n => drawNode(n, 32));
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

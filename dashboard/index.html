@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BASALT // COMMAND CENTER</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #030303;
+    --surface: #0a0a0a;
+    --surface-raised: #0f0f0f;
+    --border: #1a1a1a;
+    --border-bright: #2a2a2a;
+    --phosphor: #00ff41;
+    --phosphor-dim: #00cc33;
+    --phosphor-glow: rgba(0, 255, 65, 0.15);
+    --phosphor-ghost: rgba(0, 255, 65, 0.05);
+    --amber: #ffb000;
+    --amber-dim: rgba(255, 176, 0, 0.6);
+    --crimson: #ff2d2d;
+    --crimson-dim: rgba(255, 45, 45, 0.6);
+    --cyan: #00e5ff;
+    --cyan-dim: rgba(0, 229, 255, 0.6);
+    --text: #c8c8c8;
+    --text-dim: #666;
+    --text-faint: #3a3a3a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--void);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ── CRT Scanline Overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.08) 2px,
+      rgba(0, 0, 0, 0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── Noise texture ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px;
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  .shell {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+    position: relative;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .ascii-title {
+    font-size: 0.55rem;
+    line-height: 1.15;
+    color: var(--phosphor);
+    text-shadow: 0 0 20px var(--phosphor-glow), 0 0 40px var(--phosphor-ghost);
+    letter-spacing: 1px;
+    white-space: pre;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+
+  .header-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .header-meta a {
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-meta a:hover { color: var(--phosphor); border-color: var(--phosphor); }
+
+  .header-sep { color: var(--text-faint); }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--phosphor);
+    box-shadow: 0 0 6px var(--phosphor);
+    animation: blink 2s infinite;
+    display: inline-block;
+  }
+
+  /* ── Metric Grid ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.15s forwards;
+  }
+
+  @media (max-width: 900px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .metrics { grid-template-columns: 1fr; } }
+
+  .metric {
+    background: var(--surface);
+    padding: 20px 18px;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .metric:hover { background: var(--surface-raised); }
+
+  .metric-label {
+    font-size: 0.6rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .metric-label .tag {
+    font-size: 0.5rem;
+    padding: 1px 5px;
+    border: 1px solid var(--border-bright);
+    color: var(--text-faint);
+    letter-spacing: 0.5px;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 6px;
+    transition: color 0.3s;
+  }
+
+  .metric-value.glow-green {
+    color: var(--phosphor);
+    text-shadow: 0 0 12px var(--phosphor-glow);
+  }
+
+  .metric-value.glow-amber {
+    color: var(--amber);
+    text-shadow: 0 0 12px rgba(255, 176, 0, 0.2);
+  }
+
+  .metric-value.glow-cyan {
+    color: var(--cyan);
+    text-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
+  }
+
+  .metric-sub {
+    font-size: 0.6rem;
+    color: var(--text-faint);
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Graduation Progress ── */
+  .graduation {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.3s forwards;
+  }
+
+  .grad-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .grad-title {
+    font-size: 0.6rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+  }
+
+  .grad-value {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--phosphor);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .progress-track {
+    height: 3px;
+    background: var(--border);
+    position: relative;
+    overflow: visible;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--phosphor);
+    box-shadow: 0 0 12px var(--phosphor-glow), 0 0 24px var(--phosphor-ghost);
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+  }
+
+  .progress-bar::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: -4px;
+    width: 2px;
+    height: 11px;
+    background: var(--phosphor);
+    box-shadow: 0 0 8px var(--phosphor);
+  }
+
+  .grad-markers {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.55rem;
+    color: var(--text-faint);
+  }
+
+  /* ── Actions Panel ── */
+  .actions-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.45s forwards;
+  }
+
+  .actions-title {
+    font-size: 0.6rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    padding: 16px 20px 0;
+  }
+
+  .action-list { padding: 12px 0; }
+
+  .action-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 20px;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: var(--text);
+    transition: background 0.15s;
+  }
+  .action-row:hover { background: var(--surface-raised); }
+
+  .action-indicator {
+    width: 3px;
+    min-height: 16px;
+    height: 100%;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .action-indicator.sev-critical { background: var(--crimson); box-shadow: 0 0 6px var(--crimson-dim); }
+  .action-indicator.sev-warning  { background: var(--amber); box-shadow: 0 0 6px var(--amber-dim); }
+  .action-indicator.sev-info     { background: var(--cyan); box-shadow: 0 0 6px var(--cyan-dim); }
+  .action-indicator.sev-ok       { background: var(--phosphor); box-shadow: 0 0 6px var(--phosphor-glow); }
+
+  .action-content { flex: 1; }
+
+  .action-prefix {
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .action-prefix.critical { color: var(--crimson); }
+  .action-prefix.warning  { color: var(--amber); }
+  .action-prefix.info     { color: var(--cyan); }
+  .action-prefix.ok       { color: var(--phosphor); }
+
+  /* ── External Links ── */
+  .ext-links {
+    display: flex;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.6s forwards;
+  }
+
+  .ext-link {
+    flex: 1;
+    background: var(--surface);
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: center;
+    transition: color 0.2s, background 0.2s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .ext-link:hover {
+    color: var(--phosphor);
+    background: var(--surface-raised);
+  }
+
+  @media (max-width: 600px) {
+    .ext-links { flex-direction: column; }
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    font-size: 0.55rem;
+    color: var(--text-faint);
+    letter-spacing: 1px;
+    padding-top: 12px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.75s forwards;
+  }
+
+  .footer-time { font-variant-numeric: tabular-nums; }
+
+  /* ── Loading state ── */
+  .skeleton {
+    color: var(--text-faint);
+    animation: shimmer 1.8s infinite;
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.3; }
+  }
+
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.3; }
+    50%      { opacity: 0.6; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="ascii-title">
+ ██████╗  █████╗ ███████╗ █████╗ ██╗  ████████╗
+ ██╔══██╗██╔══██╗██╔════╝██╔══██╗██║  ╚══██╔══╝
+ ██████╔╝███████║███████╗███████║██║     ██║
+ ██╔══██╗██╔══██║╚════██║██╔══██║██║     ██║
+ ██████╔╝██║  ██║███████║██║  ██║███████╗██║
+ ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝╚═╝
+    </div>
+    <div class="header-meta">
+      <span class="live-dot"></span>
+      <span>LIVE ON BASE</span>
+      <span class="header-sep">/</span>
+      <a href="https://basescan.org/address/0x254a6564AcdDaF56663f682825Fc16652af06AC2" target="_blank">TOKEN</a>
+      <span class="header-sep">/</span>
+      <a href="https://basescan.org/address/0xc20ebec1eF53B9B31F506a283f6181d6086655Db" target="_blank">ROUTER</a>
+      <span class="header-sep">/</span>
+      <span>CHAIN 8453</span>
+    </div>
+  </div>
+
+  <!-- Metrics Grid -->
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Intrinsic Value <span class="tag">FLOOR</span></div>
+      <div class="metric-value glow-green" id="iv"><span class="skeleton">0.000000</span></div>
+      <div class="metric-sub">ETH / token &mdash; can only rise</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Spot Price <span class="tag">CURVE</span></div>
+      <div class="metric-value glow-green" id="spot"><span class="skeleton">0.000000</span></div>
+      <div class="metric-sub">Current bonding curve price</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Treasury</div>
+      <div class="metric-value" id="treasury"><span class="skeleton">0.0000</span></div>
+      <div class="metric-sub">Real ETH backing token value</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Spot / IV</div>
+      <div class="metric-value glow-cyan" id="ratio"><span class="skeleton">--</span></div>
+      <div class="metric-sub">Premium above floor</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Circulating</div>
+      <div class="metric-value" id="circulating"><span class="skeleton">0</span></div>
+      <div class="metric-sub" id="burnedSub">loading burn data...</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Volume</div>
+      <div class="metric-value" id="volume"><span class="skeleton">0.0000</span></div>
+      <div class="metric-sub">Cumulative ETH traded</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Creator Revenue</div>
+      <div class="metric-value glow-amber" id="earnings"><span class="skeleton">0.0000</span></div>
+      <div class="metric-sub">Wallet 0x7a3E...2334</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Status</div>
+      <div class="metric-value" id="status"><span class="skeleton">---</span></div>
+      <div class="metric-sub" id="statusSub">loading...</div>
+    </div>
+  </div>
+
+  <!-- Graduation Progress -->
+  <div class="graduation">
+    <div class="grad-header">
+      <span class="grad-title">Graduation Progress</span>
+      <span class="grad-value" id="gradLabel">0.00 / 4.00 ETH</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-bar" id="gradBar" style="width: 0%"></div>
+    </div>
+    <div class="grad-markers">
+      <span>0</span>
+      <span>0.00025</span>
+      <span>0.0005</span>
+      <span>0.00075</span>
+      <span>0.001 ETH &rarr; AERO 60% + V4 40%</span>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions-panel">
+    <div class="actions-title">Action Items</div>
+    <div class="action-list" id="actionList">
+      <div class="action-row">
+        <div class="action-indicator sev-info"></div>
+        <div class="action-content"><span class="skeleton">Loading on-chain state...</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Links -->
+  <div class="ext-links">
+    <a class="ext-link" href="https://basescan.org/address/0x254a6564AcdDaF56663f682825Fc16652af06AC2" target="_blank">Basescan Token</a>
+    <a class="ext-link" href="https://basescan.org/address/0xc20ebec1eF53B9B31F506a283f6181d6086655Db" target="_blank">Basescan Router</a>
+    <a class="ext-link" href="https://dexscreener.com/base/0x254a6564AcdDaF56663f682825Fc16652af06AC2" target="_blank">DexScreener</a>
+    <a class="ext-link" href="https://gopluslabs.io/token-security/8453/0x254a6564AcdDaF56663f682825Fc16652af06AC2" target="_blank">GoPlus Scan</a>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span class="footer-time" id="lastUpdate">AWAITING FIRST SYNC...</span>
+  </div>
+
+</div>
+
+<script>
+const ROUTER_ADDR = "0xc20ebec1eF53B9B31F506a283f6181d6086655Db";
+const TOKEN_ADDR  = "0x254a6564AcdDaF56663f682825Fc16652af06AC2";
+const CREATOR_ADDR = "0x7a3E312Ec6e20a9F62fE2405938EB9060312E334";
+const RPC = "https://mainnet.base.org";
+
+const ROUTER_ABI = [
+  "function iv() view returns (uint256)",
+  "function spotPrice() view returns (uint256)",
+  "function realETH() view returns (uint256)",
+  "function circulating() view returns (uint256)",
+  "function totalBurned() view returns (uint256)",
+  "function totalVolume() view returns (uint256)",
+  "function graduated() view returns (bool)",
+  "function aeroPool() view returns (address)",
+  "function v4TokenId() view returns (uint256)",
+  "function vETH() view returns (uint256)",
+  "function vTOK() view returns (uint256)",
+];
+
+const TOKEN_ABI = [
+  "function totalSupply() view returns (uint256)",
+  "function balanceOf(address) view returns (uint256)",
+  "function owner() view returns (address)",
+];
+
+function fmt(wei, decimals = 6) {
+  const f = parseFloat(ethers.formatEther(wei));
+  if (f === 0) return "0";
+  if (f < 0.000001) return f.toExponential(2);
+  if (f < 1) return f.toFixed(decimals);
+  if (f < 1000) return f.toFixed(4);
+  if (f < 1000000) return (f / 1000).toFixed(2) + "K";
+  if (f < 1000000000) return (f / 1000000).toFixed(2) + "M";
+  return (f / 1000000000).toFixed(2) + "B";
+}
+
+async function refresh() {
+  try {
+    const provider = new ethers.JsonRpcProvider(RPC, undefined, { batchMaxCount: 5 });
+    const router = new ethers.Contract(ROUTER_ADDR, ROUTER_ABI, provider);
+
+    // Batch 1 (5 calls)
+    const [iv, spot, realETH, circ, burned] = await Promise.all([
+      router.iv(), router.spotPrice(), router.realETH(), router.circulating(), router.totalBurned(),
+    ]);
+
+    // Batch 2 (5 calls)
+    const [volume, grad, aeroPool, v4Id, creatorBal] = await Promise.all([
+      router.totalVolume(), router.graduated(), router.aeroPool(), router.v4TokenId(),
+      provider.getBalance(CREATOR_ADDR),
+    ]);
+
+    // ── Update Metrics ──
+    document.getElementById("iv").textContent = fmt(iv) + " ETH";
+    document.getElementById("spot").textContent = fmt(spot) + " ETH";
+    document.getElementById("treasury").textContent = fmt(realETH) + " ETH";
+    document.getElementById("circulating").textContent = fmt(circ) + " RISE";
+    document.getElementById("volume").textContent = fmt(volume) + " ETH";
+    document.getElementById("earnings").textContent = fmt(creatorBal) + " ETH";
+
+    const burnPct = (parseFloat(ethers.formatEther(burned)) / 1e9 * 100).toFixed(2);
+    document.getElementById("burnedSub").textContent = `${fmt(burned)} burned (${burnPct}% supply)`;
+
+    // Status
+    const statusEl = document.getElementById("status");
+    const statusSub = document.getElementById("statusSub");
+    if (grad) {
+      statusEl.textContent = "GRADUATED";
+      statusEl.className = "metric-value glow-green";
+      const ps = aeroPool.slice(0, 6) + "..." + aeroPool.slice(-4);
+      statusSub.textContent = `Aero: ${ps} | V4 NFT #${v4Id}`;
+    } else {
+      statusEl.textContent = "BONDING";
+      statusEl.className = "metric-value glow-amber";
+      statusSub.textContent = "Curve active. Buy via router.";
+    }
+
+    // Ratio
+    const ratioEl = document.getElementById("ratio");
+    if (iv > 0n) {
+      const r = parseFloat(ethers.formatEther(spot)) / parseFloat(ethers.formatEther(iv));
+      ratioEl.textContent = r.toFixed(2) + "x";
+    } else {
+      ratioEl.textContent = "N/A";
+    }
+
+    // Graduation bar
+    const ethFloat = parseFloat(ethers.formatEther(realETH));
+    const GRAD_TARGET = 0.001;
+    const pct = Math.min(100, ethFloat / GRAD_TARGET * 100);
+    document.getElementById("gradBar").style.width = pct + "%";
+    document.getElementById("gradLabel").textContent = `${ethFloat.toFixed(6)} / ${GRAD_TARGET} ETH (${pct.toFixed(1)}%)`;
+
+    // ── Action Items ──
+    const actions = [];
+    const circFloat = parseFloat(ethers.formatEther(circ));
+    const volFloat  = parseFloat(ethers.formatEther(volume));
+
+    if (!grad) {
+      if (ethFloat === 0) {
+        actions.push({ sev: "critical", prefix: "SEED", text: "No buys yet. Send 0.0005 ETH to router.buy(0) to seed the pool." });
+        actions.push({ sev: "warning",  prefix: "SHARE", text: "Share router address. Buyers call buy{value: X}(0)." });
+      } else if (pct < 50) {
+        actions.push({ sev: "warning", prefix: "GROW", text: `Treasury at ${ethFloat.toFixed(6)} ETH (${pct.toFixed(0)}%). Need ${GRAD_TARGET} to graduate.` });
+      } else if (pct < 90) {
+        actions.push({ sev: "info", prefix: "TRACK", text: `Treasury ${ethFloat.toFixed(6)} ETH (${pct.toFixed(0)}%). Graduation approaching!` });
+      } else {
+        actions.push({ sev: "ok", prefix: "CLOSE", text: `Treasury ${ethFloat.toFixed(6)} ETH (${pct.toFixed(0)}%). One more buy triggers graduation!` });
+      }
+      if (circFloat > 0 && volFloat > 0) {
+        actions.push({ sev: "ok", prefix: "IV", text: `Floor at ${fmt(iv)} ETH/token. Rising with every trade.` });
+      }
+      actions.push({ sev: "info", prefix: "AUDIT", text: "Run GoPlus scan to verify all-green bot safety flags." });
+      actions.push({ sev: "info", prefix: "POST-GRAD", text: "After graduation: auto-list on Aerodrome + Uniswap V4. DexScreener visible." });
+    } else {
+      actions.push({ sev: "ok", prefix: "LIVE", text: "LP deployed to Aerodrome (60%) + Uniswap V4 (40%). Trading is open." });
+      actions.push({ sev: "ok", prefix: "LOCKED", text: "All LP permanently burned to 0xdead. Anti-rug verified." });
+      actions.push({ sev: "info", prefix: "MONITOR", text: "Check DexScreener for live pair, volume, and chart." });
+    }
+
+    const actionList = document.getElementById("actionList");
+    actionList.innerHTML = actions.map(a => `
+      <div class="action-row">
+        <div class="action-indicator sev-${a.sev}"></div>
+        <div class="action-content">
+          <span class="action-prefix ${a.sev}">[${a.prefix}]</span>${a.text}
+        </div>
+      </div>
+    `).join("");
+
+    const now = new Date();
+    const ts = now.toLocaleTimeString('en-US', { hour12: false });
+    document.getElementById("lastUpdate").textContent = `LAST SYNC ${ts} UTC // REFRESH 15s // BASE CHAIN 8453`;
+
+  } catch (err) {
+    console.error("Refresh error:", err);
+    document.getElementById("lastUpdate").textContent = `ERR: ${err.message.slice(0, 80)}`;
+  }
+}
+
+refresh();
+setInterval(refresh, 15000);
+</script>
+</body>
+</html>

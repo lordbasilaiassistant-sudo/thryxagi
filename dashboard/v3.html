@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V3 // COMMAND CENTER</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #030303;
+    --surface: #0a0a0a;
+    --surface-raised: #0f0f0f;
+    --border: #1a1a1a;
+    --border-bright: #2a2a2a;
+    --phosphor: #00ff41;
+    --phosphor-dim: #00cc33;
+    --phosphor-glow: rgba(0, 255, 65, 0.15);
+    --phosphor-ghost: rgba(0, 255, 65, 0.05);
+    --amber: #ffb000;
+    --amber-dim: rgba(255, 176, 0, 0.6);
+    --crimson: #ff2d2d;
+    --crimson-dim: rgba(255, 45, 45, 0.6);
+    --cyan: #00e5ff;
+    --cyan-dim: rgba(0, 229, 255, 0.6);
+    --text: #c8c8c8;
+    --text-dim: #666;
+    --text-faint: #3a3a3a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--void);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .shell { max-width: 1280px; margin: 0 auto; padding: 24px 20px 48px; }
+
+  .header { text-align: center; margin-bottom: 32px; opacity: 0; animation: fadeUp 0.6s ease forwards; }
+  .ascii-title {
+    font-size: 0.55rem; line-height: 1.15; color: var(--phosphor);
+    text-shadow: 0 0 20px var(--phosphor-glow), 0 0 40px var(--phosphor-ghost);
+    letter-spacing: 1px; white-space: pre; display: inline-block; margin-bottom: 12px;
+  }
+  .header-meta {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0.5px;
+  }
+  .header-meta a { color: var(--text-dim); text-decoration: none; border-bottom: 1px solid var(--border); transition: color 0.2s; }
+  .header-meta a:hover { color: var(--phosphor); border-color: var(--phosphor); }
+  .header-sep { color: var(--text-faint); }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--phosphor);
+    box-shadow: 0 0 6px var(--phosphor); animation: blink 2s infinite; display: inline-block;
+  }
+
+  .metrics {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); margin-bottom: 20px;
+    opacity: 0; animation: fadeUp 0.6s ease 0.15s forwards;
+  }
+  @media (max-width: 900px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .metrics { grid-template-columns: 1fr; } }
+  .metric { background: var(--surface); padding: 20px 18px; transition: background 0.2s; }
+  .metric:hover { background: var(--surface-raised); }
+  .metric-label {
+    font-size: 0.6rem; font-weight: 500; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--text-dim); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+  }
+  .metric-label .tag { font-size: 0.5rem; padding: 1px 5px; border: 1px solid var(--border-bright); color: var(--text-faint); }
+  .metric-value { font-size: 1.5rem; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 6px; transition: color 0.3s; }
+  .metric-value.glow-green { color: var(--phosphor); text-shadow: 0 0 12px var(--phosphor-glow); }
+  .metric-value.glow-amber { color: var(--amber); text-shadow: 0 0 12px rgba(255,176,0,0.2); }
+  .metric-value.glow-cyan { color: var(--cyan); text-shadow: 0 0 12px rgba(0,229,255,0.2); }
+  .metric-sub { font-size: 0.6rem; color: var(--text-faint); letter-spacing: 0.3px; }
+
+  .graduation {
+    background: var(--surface); border: 1px solid var(--border); padding: 20px; margin-bottom: 20px;
+    opacity: 0; animation: fadeUp 0.6s ease 0.3s forwards;
+  }
+  .grad-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .grad-title { font-size: 0.6rem; font-weight: 500; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); }
+  .grad-value { font-size: 0.7rem; font-weight: 700; color: var(--phosphor); font-variant-numeric: tabular-nums; }
+  .progress-track { height: 3px; background: var(--border); position: relative; overflow: visible; }
+  .progress-bar {
+    height: 100%; background: var(--phosphor);
+    box-shadow: 0 0 12px var(--phosphor-glow), 0 0 24px var(--phosphor-ghost);
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1); position: relative;
+  }
+  .progress-bar::after {
+    content: ''; position: absolute; right: -1px; top: -4px; width: 2px; height: 11px;
+    background: var(--phosphor); box-shadow: 0 0 8px var(--phosphor);
+  }
+  .tier-markers { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.55rem; color: var(--text-faint); }
+  .tier-markers .active { color: var(--phosphor); font-weight: 700; }
+  .tier-markers .completed { color: var(--phosphor-dim); }
+
+  /* Tier grid */
+  .tier-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); margin-bottom: 20px;
+    opacity: 0; animation: fadeUp 0.6s ease 0.35s forwards;
+  }
+  .tier-cell { background: var(--surface); padding: 12px 10px; text-align: center; font-size: 0.6rem; }
+  .tier-cell .tier-num { font-weight: 700; margin-bottom: 4px; color: var(--text-dim); }
+  .tier-cell .tier-thresh { font-variant-numeric: tabular-nums; margin-bottom: 4px; }
+  .tier-cell .tier-status { font-size: 0.5rem; text-transform: uppercase; letter-spacing: 1px; }
+  .tier-cell.completed { border-bottom: 2px solid var(--phosphor); }
+  .tier-cell.completed .tier-num { color: var(--phosphor); }
+  .tier-cell.completed .tier-status { color: var(--phosphor); }
+  .tier-cell.active { border-bottom: 2px solid var(--amber); }
+  .tier-cell.active .tier-num { color: var(--amber); }
+  .tier-cell.active .tier-status { color: var(--amber); }
+  .tier-cell.failed { border-bottom: 2px solid var(--crimson); }
+  .tier-cell.failed .tier-num { color: var(--crimson); }
+  .tier-cell.failed .tier-status { color: var(--crimson); }
+
+  .actions-panel {
+    background: var(--surface); border: 1px solid var(--border); margin-bottom: 20px;
+    opacity: 0; animation: fadeUp 0.6s ease 0.45s forwards;
+  }
+  .actions-title { font-size: 0.6rem; font-weight: 500; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); padding: 16px 20px 0; }
+  .action-list { padding: 12px 0; }
+  .action-row {
+    display: flex; align-items: flex-start; gap: 12px; padding: 10px 20px;
+    font-size: 0.72rem; line-height: 1.5; color: var(--text); transition: background 0.15s;
+  }
+  .action-row:hover { background: var(--surface-raised); }
+  .action-indicator { width: 3px; min-height: 16px; flex-shrink: 0; margin-top: 2px; }
+  .action-indicator.sev-critical { background: var(--crimson); box-shadow: 0 0 6px var(--crimson-dim); }
+  .action-indicator.sev-warning { background: var(--amber); box-shadow: 0 0 6px var(--amber-dim); }
+  .action-indicator.sev-info { background: var(--cyan); box-shadow: 0 0 6px var(--cyan-dim); }
+  .action-indicator.sev-ok { background: var(--phosphor); box-shadow: 0 0 6px var(--phosphor-glow); }
+  .action-content { flex: 1; }
+  .action-prefix { font-weight: 700; margin-right: 6px; }
+  .action-prefix.critical { color: var(--crimson); }
+  .action-prefix.warning { color: var(--amber); }
+  .action-prefix.info { color: var(--cyan); }
+  .action-prefix.ok { color: var(--phosphor); }
+
+  .ext-links {
+    display: flex; gap: 1px; background: var(--border); border: 1px solid var(--border);
+    margin-bottom: 20px; opacity: 0; animation: fadeUp 0.6s ease 0.6s forwards;
+  }
+  .ext-link {
+    flex: 1; background: var(--surface); padding: 14px 16px; text-decoration: none;
+    font-size: 0.6rem; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-dim); text-align: center; transition: color 0.2s, background 0.2s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .ext-link:hover { color: var(--phosphor); background: var(--surface-raised); }
+  @media (max-width: 600px) { .ext-links { flex-direction: column; } }
+
+  .footer {
+    text-align: center; font-size: 0.55rem; color: var(--text-faint); letter-spacing: 1px;
+    padding-top: 12px; opacity: 0; animation: fadeUp 0.6s ease 0.75s forwards;
+  }
+  .footer-time { font-variant-numeric: tabular-nums; }
+  .skeleton { color: var(--text-faint); animation: shimmer 1.8s infinite; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @keyframes shimmer { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="header">
+    <div class="ascii-title">
+ ██╗   ██╗██████╗
+ ██║   ██║╚════██╗
+ ██║   ██║ █████╔╝   GRADIENT GRADUATION
+ ╚██╗ ██╔╝ ╚═══██╗   5-TIER DEX DEPLOYMENT
+  ╚████╔╝ ██████╔╝
+   ╚═══╝  ╚═════╝
+    </div>
+    <div class="header-meta">
+      <span class="live-dot"></span>
+      <span>LIVE ON BASE</span>
+      <span class="header-sep">/</span>
+      <a id="tokenLink" href="#" target="_blank">TOKEN</a>
+      <span class="header-sep">/</span>
+      <a id="routerLink" href="#" target="_blank">ROUTER</a>
+      <span class="header-sep">/</span>
+      <span>CHAIN 8453</span>
+    </div>
+  </div>
+
+  <!-- Metrics Grid -->
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Intrinsic Value <span class="tag">FLOOR</span></div>
+      <div class="metric-value glow-green" id="iv"><span class="skeleton">0.000000</span></div>
+      <div class="metric-sub">ETH / token - can only rise</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Spot Price <span class="tag">CURVE</span></div>
+      <div class="metric-value glow-green" id="spot"><span class="skeleton">0.000000</span></div>
+      <div class="metric-sub">Current bonding curve price</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Treasury</div>
+      <div class="metric-value" id="treasury"><span class="skeleton">0.0000</span></div>
+      <div class="metric-sub">Real ETH backing token value</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Spot / IV</div>
+      <div class="metric-value glow-cyan" id="ratio"><span class="skeleton">--</span></div>
+      <div class="metric-sub">Premium above floor</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Circulating</div>
+      <div class="metric-value" id="circulating"><span class="skeleton">0</span></div>
+      <div class="metric-sub" id="burnedSub">loading burn data...</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Volume</div>
+      <div class="metric-value" id="volume"><span class="skeleton">0.0000</span></div>
+      <div class="metric-sub">Cumulative ETH traded</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Pending Fees</div>
+      <div class="metric-value glow-amber" id="fees"><span class="skeleton">0.0000</span></div>
+      <div class="metric-sub">Claimable by creator</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Phase</div>
+      <div class="metric-value" id="phase"><span class="skeleton">---</span></div>
+      <div class="metric-sub" id="phaseSub">loading...</div>
+    </div>
+  </div>
+
+  <!-- Tier Grid -->
+  <div class="tier-grid" id="tierGrid">
+    <div class="tier-cell" id="tier0"><div class="tier-num">T0 SEED</div><div class="tier-thresh">0.001 ETH</div><div class="tier-status">pending</div></div>
+    <div class="tier-cell" id="tier1"><div class="tier-num">T1</div><div class="tier-thresh">0.005 ETH</div><div class="tier-status">pending</div></div>
+    <div class="tier-cell" id="tier2"><div class="tier-num">T2</div><div class="tier-thresh">0.02 ETH</div><div class="tier-status">pending</div></div>
+    <div class="tier-cell" id="tier3"><div class="tier-num">T3</div><div class="tier-thresh">0.1 ETH</div><div class="tier-status">pending</div></div>
+    <div class="tier-cell" id="tier4"><div class="tier-num">T4 FINAL</div><div class="tier-thresh">0.5 ETH</div><div class="tier-status">pending</div></div>
+  </div>
+
+  <!-- Graduation Progress -->
+  <div class="graduation">
+    <div class="grad-header">
+      <span class="grad-title">Treasury vs Final Graduation</span>
+      <span class="grad-value" id="gradLabel">0 / 0.5 ETH</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-bar" id="gradBar" style="width: 0%"></div>
+    </div>
+    <div class="tier-markers">
+      <span>0</span>
+      <span>T0: 0.001</span>
+      <span>T1: 0.005</span>
+      <span>T2: 0.02</span>
+      <span>T3: 0.1</span>
+      <span>T4: 0.5 ETH</span>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions-panel">
+    <div class="actions-title">Action Items</div>
+    <div class="action-list" id="actionList">
+      <div class="action-row">
+        <div class="action-indicator sev-info"></div>
+        <div class="action-content"><span class="skeleton">Loading on-chain state...</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Links -->
+  <div class="ext-links">
+    <a class="ext-link" id="bsTokenLink" href="#" target="_blank">Basescan Token</a>
+    <a class="ext-link" id="bsRouterLink" href="#" target="_blank">Basescan Router</a>
+    <a class="ext-link" id="dexLink" href="#" target="_blank">DexScreener</a>
+    <a class="ext-link" id="goplusLink" href="#" target="_blank">GoPlus Scan</a>
+  </div>
+
+  <div class="footer">
+    <span class="footer-time" id="lastUpdate">AWAITING FIRST SYNC...</span>
+  </div>
+
+</div>
+
+<script>
+// ═══ CONFIG — UPDATE AFTER DEPLOY ═══
+const ROUTER_ADDR = "0x0000000000000000000000000000000000000000"; // TODO: set after deploy
+const TOKEN_ADDR  = "0x0000000000000000000000000000000000000000"; // TODO: set after deploy
+const CREATOR_ADDR = "0x7a3E312Ec6e20a9F62fE2405938EB9060312E334";
+const RPC = "https://mainnet.base.org";
+const TIER_THRESHOLDS = [0.001, 0.005, 0.02, 0.1, 0.5];
+const FINAL_GRAD = 0.5;
+// ═════════════════════════════════════
+
+const ROUTER_ABI = [
+  "function iv() view returns (uint256)",
+  "function spotPrice() view returns (uint256)",
+  "function realETH() view returns (uint256)",
+  "function circulating() view returns (uint256)",
+  "function totalBurned() view returns (uint256)",
+  "function totalVolume() view returns (uint256)",
+  "function phase() view returns (uint8)",
+  "function currentTier() view returns (uint8)",
+  "function tierCompleted(uint256) view returns (bool)",
+  "function tierFailed(uint256) view returns (bool)",
+  "function tierETHDeployed(uint256) view returns (uint256)",
+  "function aeroPool() view returns (address)",
+  "function getV4TokenIdsLength() view returns (uint256)",
+  "function pendingCreatorFees() view returns (uint256)",
+  "function vETH() view returns (uint256)",
+  "function vTOK() view returns (uint256)",
+];
+
+// Set links
+document.getElementById("tokenLink").href = `https://basescan.org/address/${TOKEN_ADDR}`;
+document.getElementById("routerLink").href = `https://basescan.org/address/${ROUTER_ADDR}`;
+document.getElementById("bsTokenLink").href = `https://basescan.org/address/${TOKEN_ADDR}`;
+document.getElementById("bsRouterLink").href = `https://basescan.org/address/${ROUTER_ADDR}`;
+document.getElementById("dexLink").href = `https://dexscreener.com/base/${TOKEN_ADDR}`;
+document.getElementById("goplusLink").href = `https://gopluslabs.io/token-security/8453/${TOKEN_ADDR}`;
+
+function fmt(wei, decimals = 6) {
+  const f = parseFloat(ethers.formatEther(wei));
+  if (f === 0) return "0";
+  if (f < 0.000001) return f.toExponential(2);
+  if (f < 1) return f.toFixed(decimals);
+  if (f < 1000) return f.toFixed(4);
+  if (f < 1000000) return (f / 1000).toFixed(2) + "K";
+  if (f < 1000000000) return (f / 1000000).toFixed(2) + "M";
+  return (f / 1000000000).toFixed(2) + "B";
+}
+
+const PHASE_NAMES = ["BONDING", "HYBRID", "GRADUATED"];
+const PHASE_CLASSES = ["glow-amber", "glow-cyan", "glow-green"];
+
+async function refresh() {
+  if (ROUTER_ADDR === "0x0000000000000000000000000000000000000000") {
+    document.getElementById("lastUpdate").textContent = "ROUTER NOT DEPLOYED YET - UPDATE ADDRESSES IN v3.html";
+    return;
+  }
+  try {
+    const provider = new ethers.JsonRpcProvider(RPC, undefined, { batchMaxCount: 5 });
+    const router = new ethers.Contract(ROUTER_ADDR, ROUTER_ABI, provider);
+
+    const [iv, spot, realETH, circ, burned] = await Promise.all([
+      router.iv(), router.spotPrice(), router.realETH(), router.circulating(), router.totalBurned(),
+    ]);
+
+    const [volume, phase, currentTier, pendingFees, aeroPool, v4Len] = await Promise.all([
+      router.totalVolume(), router.phase(), router.currentTier(),
+      router.pendingCreatorFees(), router.aeroPool(), router.getV4TokenIdsLength(),
+    ]);
+
+    // Tier statuses
+    const tierData = await Promise.all(
+      [0,1,2,3,4].map(async i => ({
+        completed: await router.tierCompleted(i),
+        failed: await router.tierFailed(i),
+        deployed: await router.tierETHDeployed(i),
+      }))
+    );
+
+    // Metrics
+    document.getElementById("iv").textContent = fmt(iv) + " ETH";
+    document.getElementById("spot").textContent = fmt(spot) + " ETH";
+    document.getElementById("treasury").textContent = fmt(realETH) + " ETH";
+    document.getElementById("circulating").textContent = fmt(circ);
+    document.getElementById("volume").textContent = fmt(volume) + " ETH";
+    document.getElementById("fees").textContent = fmt(pendingFees) + " ETH";
+
+    const burnPct = (parseFloat(ethers.formatEther(burned)) / 1e9 * 100).toFixed(2);
+    document.getElementById("burnedSub").textContent = `${fmt(burned)} burned (${burnPct}%)`;
+
+    // Phase
+    const phaseNum = Number(phase);
+    const phaseEl = document.getElementById("phase");
+    phaseEl.textContent = PHASE_NAMES[phaseNum] || "UNKNOWN";
+    phaseEl.className = "metric-value " + (PHASE_CLASSES[phaseNum] || "");
+    const phaseSub = document.getElementById("phaseSub");
+    if (phaseNum === 0) phaseSub.textContent = `Tier ${currentTier}/5 | Buy + Sell active`;
+    else if (phaseNum === 1) phaseSub.textContent = `Tier ${currentTier}/5 | Buy only, sells disabled`;
+    else phaseSub.textContent = `All tiers complete | DEX only`;
+
+    // Ratio
+    const ratioEl = document.getElementById("ratio");
+    if (iv > 0n) {
+      ratioEl.textContent = (parseFloat(ethers.formatEther(spot)) / parseFloat(ethers.formatEther(iv))).toFixed(2) + "x";
+    } else {
+      ratioEl.textContent = "N/A";
+    }
+
+    // Tier grid
+    for (let i = 0; i < 5; i++) {
+      const cell = document.getElementById(`tier${i}`);
+      const statusEl = cell.querySelector('.tier-status');
+      cell.className = "tier-cell";
+      if (tierData[i].completed) {
+        cell.classList.add("completed");
+        const dep = parseFloat(ethers.formatEther(tierData[i].deployed)).toFixed(6);
+        statusEl.textContent = `DONE (${dep} ETH)`;
+      } else if (tierData[i].failed) {
+        cell.classList.add("failed");
+        statusEl.textContent = "FAILED - RETRY";
+      } else if (i === Number(currentTier)) {
+        cell.classList.add("active");
+        statusEl.textContent = "NEXT";
+      } else {
+        statusEl.textContent = "PENDING";
+      }
+    }
+
+    // Progress bar
+    const ethFloat = parseFloat(ethers.formatEther(realETH));
+    const pct = Math.min(100, ethFloat / FINAL_GRAD * 100);
+    document.getElementById("gradBar").style.width = pct + "%";
+    document.getElementById("gradLabel").textContent = `${ethFloat.toFixed(6)} / ${FINAL_GRAD} ETH (${pct.toFixed(1)}%)`;
+
+    // Actions
+    const actions = [];
+    if (phaseNum < 2) {
+      if (ethFloat === 0) {
+        actions.push({ sev: "critical", prefix: "SEED", text: "No buys yet. Send min 0.0001 ETH via router.buy(0)." });
+      }
+      const ct = Number(currentTier);
+      if (ct < 5) {
+        const nextThresh = TIER_THRESHOLDS[ct];
+        const remaining = Math.max(0, nextThresh - ethFloat);
+        actions.push({ sev: "warning", prefix: `TIER ${ct}`, text: `Need ${remaining.toFixed(6)} more ETH to trigger tier ${ct} (threshold: ${nextThresh} ETH).` });
+      }
+      if (tierData.some(t => t.failed)) {
+        actions.push({ sev: "critical", prefix: "RETRY", text: "A tier failed. Call retryTier(N) on the router to re-attempt." });
+      }
+      if (iv > 0n) {
+        actions.push({ sev: "ok", prefix: "IV", text: `Floor at ${fmt(iv)} ETH/token. Rising with every trade.` });
+      }
+      if (phaseNum === 1) {
+        actions.push({ sev: "info", prefix: "HYBRID", text: "DEX pools seeded. Sells disabled on router. Buy only until final graduation." });
+      }
+    } else {
+      actions.push({ sev: "ok", prefix: "LIVE", text: "Fully graduated. All trading on Aerodrome + Uniswap V4." });
+      actions.push({ sev: "ok", prefix: "LOCKED", text: "All LP permanently burned to 0xdead." });
+      if (pendingFees > 0n) {
+        actions.push({ sev: "warning", prefix: "FEES", text: `${fmt(pendingFees)} ETH claimable. Call claimFees() on router.` });
+      }
+    }
+
+    document.getElementById("actionList").innerHTML = actions.map(a => `
+      <div class="action-row">
+        <div class="action-indicator sev-${a.sev}"></div>
+        <div class="action-content"><span class="action-prefix ${a.sev}">[${a.prefix}]</span>${a.text}</div>
+      </div>
+    `).join("");
+
+    const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
+    document.getElementById("lastUpdate").textContent = `LAST SYNC ${ts} UTC // REFRESH 15s // V3 GRADIENT // CHAIN 8453`;
+
+  } catch (err) {
+    console.error("Refresh error:", err);
+    document.getElementById("lastUpdate").textContent = `ERR: ${err.message.slice(0, 80)}`;
+  }
+}
+
+refresh();
+setInterval(refresh, 15000);
+</script>
+</body>
+</html>

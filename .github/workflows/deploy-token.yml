@@ -1,0 +1,186 @@
+name: Deploy Token via LaunchPad
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  deploy:
+    if: contains(github.event.issue.labels.*.name, 'launch-request')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse launch request
+        id: parse
+        run: |
+          BODY='${{ github.event.issue.body }}'
+
+          # Extract YAML block between ```yaml and ```
+          YAML_BLOCK=$(echo "$BODY" | sed -n '/^```yaml/,/^```$/p' | sed '1d;$d')
+
+          if [ -z "$YAML_BLOCK" ]; then
+            echo "error=No YAML block found in issue body" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Parse fields from YAML
+          NAME=$(echo "$YAML_BLOCK" | grep '^name:' | sed 's/^name: *//')
+          SYMBOL=$(echo "$YAML_BLOCK" | grep '^symbol:' | sed 's/^symbol: *//')
+          PAYOUT=$(echo "$YAML_BLOCK" | grep '^payout:' | sed 's/^payout: *"*//' | sed 's/"*$//')
+
+          # Validate
+          if [ -z "$NAME" ] || [ "$NAME" = "" ]; then
+            echo "error=Token name is empty" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          if [ -z "$SYMBOL" ] || [ "$SYMBOL" = "" ]; then
+            echo "error=Token symbol is empty" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          if ! echo "$PAYOUT" | grep -qE '^0x[a-fA-F0-9]{40}$'; then
+            echo "error=Invalid payout address: $PAYOUT" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "symbol=$SYMBOL" >> $GITHUB_OUTPUT
+          echo "payout=$PAYOUT" >> $GITHUB_OUTPUT
+          echo "Parsed: name=$NAME symbol=$SYMBOL payout=$PAYOUT"
+
+      - name: Comment on parse failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `**Deploy failed:** Could not parse launch request.\n\nPlease make sure your issue contains a valid YAML block:\n\`\`\`yaml\nname: YourTokenName\nsymbol: TICKER\npayout: "0xYourWalletAddress"\n\`\`\`\n\nThen open a new issue with the corrected details.`
+            });
+            await github.rest.issues.update({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed',
+              labels: ['launch-request', 'deploy-failed']
+            });
+
+      - name: Install Foundry
+        if: success()
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Deploy token via LaunchPad
+        if: success()
+        id: deploy
+        env:
+          THRYXTREASURY_PRIVATE_KEY: ${{ secrets.THRYXTREASURY_PRIVATE_KEY }}
+          RPC_URL: https://mainnet.base.org
+          TOKEN_NAME: ${{ steps.parse.outputs.name }}
+          TOKEN_SYMBOL: ${{ steps.parse.outputs.symbol }}
+          CREATOR_PAYOUT: ${{ steps.parse.outputs.payout }}
+        run: |
+          # Use forge script to call LaunchPad.launch(name, symbol, creator)
+          # The LaunchPad contract handles token creation + pool setup
+          forge script script/LaunchToken.s.sol \
+            --rpc-url "$RPC_URL" \
+            --broadcast \
+            --json 2>&1 | tee deploy-output.json
+
+          # Extract deployed addresses from forge output
+          # The script should log: token=0x... pool=0x...
+          TOKEN=$(grep -oP 'token=\K0x[a-fA-F0-9]{40}' deploy-output.json || echo "")
+          POOL=$(grep -oP 'pool=\K0x[a-fA-F0-9]{40}' deploy-output.json || echo "")
+
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+          echo "pool=$POOL" >> $GITHUB_OUTPUT
+
+      - name: Update state/tokens.json
+        if: success() && steps.deploy.outputs.token != ''
+        run: |
+          mkdir -p state
+          TOKENS_FILE="state/tokens.json"
+
+          if [ ! -f "$TOKENS_FILE" ]; then
+            echo '{"tokens":[]}' > "$TOKENS_FILE"
+          fi
+
+          # Add new token entry
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          jq --arg name "${{ steps.parse.outputs.name }}" \
+             --arg symbol "${{ steps.parse.outputs.symbol }}" \
+             --arg token "${{ steps.deploy.outputs.token }}" \
+             --arg pool "${{ steps.deploy.outputs.pool }}" \
+             --arg payout "${{ steps.parse.outputs.payout }}" \
+             --arg issue "${{ github.event.issue.number }}" \
+             --arg ts "$TIMESTAMP" \
+             '.tokens += [{"name":$name,"symbol":$symbol,"token":$token,"pool":$pool,"payout":$payout,"issue":$issue,"deployedAt":$ts}]' \
+             "$TOKENS_FILE" > tmp.json && mv tmp.json "$TOKENS_FILE"
+
+          git config user.name "THRYXAGI Deploy Bot"
+          git config user.email "deploy@thryxagi.com"
+          git add state/tokens.json
+          git commit -m "deploy: ${{ steps.parse.outputs.symbol }} token via issue #${{ github.event.issue.number }}"
+          git push
+
+      - name: Comment success
+        if: success() && steps.deploy.outputs.token != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = '${{ steps.deploy.outputs.token }}';
+            const pool = '${{ steps.deploy.outputs.pool }}';
+            const name = '${{ steps.parse.outputs.name }}';
+            const symbol = '${{ steps.parse.outputs.symbol }}';
+            const payout = '${{ steps.parse.outputs.payout }}';
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: [
+                `## Token Deployed`,
+                ``,
+                `| Field | Value |`,
+                `|-------|-------|`,
+                `| Name | ${name} |`,
+                `| Symbol | $${symbol} |`,
+                `| Token | [${token}](https://basescan.org/address/${token}) |`,
+                `| Pool | [${pool}](https://basescan.org/address/${pool}) |`,
+                `| Payout | [${payout}](https://basescan.org/address/${payout}) |`,
+                ``,
+                `Your token is live on Base. Every swap auto-sends 50% of fees as OBSD to your payout wallet.`,
+                ``,
+                `_Deployed by THRYXAGI LaunchPad_`
+              ].join('\n')
+            });
+
+            await github.rest.issues.update({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed',
+              labels: ['launch-request', 'deployed']
+            });
+
+      - name: Comment deploy failure
+        if: failure() && steps.parse.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `**Deploy failed.** The on-chain transaction could not be completed. Our team has been notified and will retry manually.\n\nToken: ${{ steps.parse.outputs.name }} (${{ steps.parse.outputs.symbol }})\nPayout: ${{ steps.parse.outputs.payout }}`
+            });
+            await github.rest.issues.update({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['launch-request', 'deploy-failed']
+            });

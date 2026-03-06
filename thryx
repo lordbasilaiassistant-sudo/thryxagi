@@ -15,6 +15,9 @@ thryx — THRYXAGI Agent Automation CLI
 
 COMMANDS:
   status                          Full dashboard: balances, tokens, fees, stage
+  launch "Name" TICKER            Launch child token via factory (OBSD-paired)
+  buy TICKER ETH_AMOUNT           Buy token with ETH (e.g., buy WORK 0.0001)
+  sell TICKER TOKEN_AMOUNT        Sell token for ETH (e.g., sell WORK 1000)
   deploy bankr <name> <ticker>    Deploy token on Bankr, update state, queue tweet
   deploy register <platform> <address> <name> <ticker>
                                   Register a deployed token in state
@@ -29,11 +32,16 @@ COMMANDS:
   payroll status                  Show agent wallet balances
   payroll add <name> <address>    Register an agent wallet
   payroll run [amount]            Distribute OBSD to agent wallets
+  mycoin <agent>                   Show agent's token, wallet, and balances
+  monitor                         Session health check: tiers, fees, volume, gas
   gen-ops                         Regenerate ops/ markdown from state/
   help                            Show this help
 
 EXAMPLES:
   ./thryx status
+  ./thryx launch "Moon Dog" MDOG
+  ./thryx buy WORK 0.0001
+  ./thryx sell WORK 1000
   ./thryx claim obsd
   ./thryx tweet "gm builders"
   ./thryx deploy bankr "Agentic Mind" AMIND
@@ -47,6 +55,9 @@ shift || true
 
 case "$cmd" in
   status)       . "$COMMANDS_DIR/status.sh" ;;
+  launch)       . "$COMMANDS_DIR/launch.sh" "$@" ;;
+  buy)          . "$COMMANDS_DIR/trade.sh" buy "$@" ;;
+  sell)         . "$COMMANDS_DIR/trade.sh" sell "$@" ;;
   deploy)       . "$COMMANDS_DIR/deploy.sh" "$@" ;;
   claim)        . "$COMMANDS_DIR/claim.sh" "$@" ;;
   tweet)        . "$COMMANDS_DIR/tweet.sh" "$@" ;;
@@ -54,6 +65,8 @@ case "$cmd" in
   treasury)     . "$COMMANDS_DIR/treasury.sh" ;;
   wallet)       . "$COMMANDS_DIR/wallet.sh" "$@" ;;
   payroll)      . "$COMMANDS_DIR/payroll.sh" "$@" ;;
+  mycoin)       . "$COMMANDS_DIR/mycoin.sh" "$@" ;;
+  monitor)      . "$COMMANDS_DIR/monitor.sh" ;;
   gen-ops)      . "$COMMANDS_DIR/gen-ops.sh" ;;
   help|--help)  usage ;;
   *)            echo "Unknown command: $cmd"; usage; exit 1 ;;

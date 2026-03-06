@@ -1,0 +1,14 @@
+{
+  "name": "doppler-integration",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "discover": "node discover.js",
+    "launch": "node launch.js"
+  },
+  "dependencies": {
+    "@whetstone-research/doppler-sdk": "^0.0.23",
+    "viem": "^2.33.3"
+  }
+}

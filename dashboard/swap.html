@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BASALT // SWAP</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #030303;
+    --surface: #0a0a0a;
+    --raised: #111;
+    --border: #1a1a1a;
+    --phosphor: #00ff41;
+    --phosphor-glow: rgba(0,255,65,0.15);
+    --amber: #ffb000;
+    --crimson: #ff2d2d;
+    --cyan: #00e5ff;
+    --text: #c8c8c8;
+    --dim: #666;
+    --faint: #333;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--void);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+    pointer-events:none; z-index:9999;
+  }
+  .swap-container {
+    width: 100%;
+    max-width: 420px;
+  }
+  .swap-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .swap-header h1 {
+    font-size: 1.2rem;
+    color: var(--phosphor);
+    text-shadow: 0 0 20px var(--phosphor-glow);
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+  }
+  .swap-header p {
+    font-size: 0.6rem;
+    color: var(--dim);
+    letter-spacing: 1px;
+  }
+  .swap-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+  }
+  .connect-btn, .swap-btn {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid var(--border);
+    background: var(--raised);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .connect-btn:hover, .swap-btn:hover {
+    border-color: var(--phosphor);
+    color: var(--phosphor);
+    box-shadow: 0 0 12px var(--phosphor-glow);
+  }
+  .swap-btn { margin-top: 16px; }
+  .swap-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: var(--border);
+    color: var(--dim);
+    box-shadow: none;
+  }
+  .swap-btn.sell-btn:hover {
+    border-color: var(--amber);
+    color: var(--amber);
+    box-shadow: 0 0 12px rgba(255,176,0,0.2);
+  }
+  .wallet-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 10px 12px;
+    background: var(--raised);
+    border: 1px solid var(--border);
+    font-size: 0.65rem;
+  }
+  .wallet-addr { color: var(--phosphor); }
+  .wallet-chain { color: var(--dim); }
+  .tab-row {
+    display: flex;
+    gap: 1px;
+    background: var(--border);
+    margin-bottom: 16px;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    background: var(--surface);
+    color: var(--dim);
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.15s;
+  }
+  .tab.active {
+    color: var(--phosphor);
+    background: var(--raised);
+  }
+  .tab:hover { color: var(--text); }
+  .input-group {
+    margin-bottom: 12px;
+  }
+  .input-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    color: var(--dim);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .input-label .bal { cursor: pointer; }
+  .input-label .bal:hover { color: var(--phosphor); }
+  .input-field {
+    width: 100%;
+    padding: 12px;
+    background: var(--void);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-field:focus { border-color: var(--phosphor); }
+  .input-field::placeholder { color: var(--faint); }
+  .estimate-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    color: var(--dim);
+    padding: 8px 0;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+  .estimate-val { color: var(--text); }
+  .stats {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    color: var(--dim);
+    padding: 4px 0;
+  }
+  .stat-row .val { color: var(--text); }
+  .stat-row .val.green { color: var(--phosphor); }
+  .status-msg {
+    margin-top: 12px;
+    padding: 10px;
+    font-size: 0.65rem;
+    text-align: center;
+    border: 1px solid var(--border);
+    display: none;
+  }
+  .status-msg.show { display: block; }
+  .status-msg.ok { border-color: var(--phosphor); color: var(--phosphor); }
+  .status-msg.err { border-color: var(--crimson); color: var(--crimson); }
+  .status-msg.pending { border-color: var(--amber); color: var(--amber); }
+  .links-row {
+    display: flex;
+    gap: 1px;
+    background: var(--border);
+    margin-top: 16px;
+  }
+  .links-row a {
+    flex: 1;
+    padding: 8px;
+    text-align: center;
+    font-size: 0.55rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--dim);
+    text-decoration: none;
+    background: var(--surface);
+    font-family: 'JetBrains Mono', monospace;
+    transition: color 0.15s;
+  }
+  .links-row a:hover { color: var(--phosphor); }
+</style>
+</head>
+<body>
+<div class="swap-container">
+  <div class="swap-header">
+    <h1>BASALT</h1>
+    <p>RISING-FLOOR TOKEN ON BASE</p>
+  </div>
+
+  <div class="swap-card">
+    <!-- Connect -->
+    <div id="connectSection">
+      <button class="connect-btn" id="connectBtn" onclick="connectWallet()">CONNECT WALLET</button>
+    </div>
+
+    <!-- Swap UI (hidden until connected) -->
+    <div id="swapSection" style="display:none">
+      <div class="wallet-info">
+        <span class="wallet-addr" id="walletAddr">0x...</span>
+        <span class="wallet-chain">BASE</span>
+      </div>
+
+      <div class="tab-row">
+        <button class="tab active" id="tabBuy" onclick="setMode('buy')">BUY</button>
+        <button class="tab" id="tabSell" onclick="setMode('sell')">SELL</button>
+      </div>
+
+      <!-- BUY -->
+      <div id="buyPanel">
+        <div class="input-group">
+          <div class="input-label">
+            <span>YOU PAY</span>
+            <span class="bal" id="ethBal" onclick="maxEth()">BAL: --</span>
+          </div>
+          <input type="text" class="input-field" id="buyInput" placeholder="0.0 ETH" oninput="estimateBuy()">
+        </div>
+        <div class="estimate-row">
+          <span>YOU RECEIVE (EST.)</span>
+          <span class="estimate-val" id="buyEstimate">-- BSLT</span>
+        </div>
+        <div class="estimate-row">
+          <span>TOKENS BURNED</span>
+          <span class="estimate-val" id="buyBurned">--</span>
+        </div>
+        <button class="swap-btn" id="buyBtn" onclick="doBuy()" disabled>BUY BSLT</button>
+      </div>
+
+      <!-- SELL -->
+      <div id="sellPanel" style="display:none">
+        <div class="input-group">
+          <div class="input-label">
+            <span>YOU SELL</span>
+            <span class="bal" id="bsltBal" onclick="maxBslt()">BAL: --</span>
+          </div>
+          <input type="text" class="input-field" id="sellInput" placeholder="0.0 BSLT" oninput="estimateSellAmt()">
+        </div>
+        <div class="estimate-row">
+          <span>YOU RECEIVE (EST.)</span>
+          <span class="estimate-val" id="sellEstimate">-- ETH</span>
+        </div>
+        <button class="swap-btn sell-btn" id="sellBtn" onclick="doSell()" disabled>SELL BSLT</button>
+      </div>
+
+      <div class="status-msg" id="statusMsg"></div>
+
+      <div class="stats">
+        <div class="stat-row"><span>SPOT PRICE</span><span class="val" id="spotPrice">--</span></div>
+        <div class="stat-row"><span>IV (FLOOR)</span><span class="val green" id="ivPrice">--</span></div>
+        <div class="stat-row"><span>TREASURY</span><span class="val" id="treasury">--</span></div>
+        <div class="stat-row"><span>STATUS</span><span class="val" id="gradStatus">--</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="links-row">
+    <a href="0x254a6564AcdDaF56663f682825Fc16652af06AC2" onclick="copyToken(event)">COPY TOKEN</a>
+    <a href="https://basescan.org/address/0x254a6564AcdDaF56663f682825Fc16652af06AC2" target="_blank">BASESCAN</a>
+    <a href="./index.html">DASHBOARD</a>
+  </div>
+</div>
+
+<script>
+const TOKEN = "0x254a6564AcdDaF56663f682825Fc16652af06AC2";
+const ROUTER = "0xc20ebec1eF53B9B31F506a283f6181d6086655Db";
+const BASE_CHAIN_ID = 8453;
+
+const ROUTER_ABI = [
+  "function buy(uint256 minTokensOut) payable",
+  "function sell(uint256 tokenAmount, uint256 minETHOut)",
+  "function estimateBuy(uint256 ethIn) view returns (uint256 tokensOut, uint256 burned)",
+  "function estimateSell(uint256 tokenAmount) view returns (uint256 ethOut)",
+  "function iv() view returns (uint256)",
+  "function spotPrice() view returns (uint256)",
+  "function realETH() view returns (uint256)",
+  "function graduated() view returns (bool)",
+];
+
+const TOKEN_ABI = [
+  "function balanceOf(address) view returns (uint256)",
+  "function approve(address,uint256) returns (bool)",
+  "function allowance(address,address) view returns (uint256)",
+];
+
+let provider, signer, router, token, userAddr;
+let mode = 'buy';
+
+function fmt(wei, dec = 6) {
+  const f = parseFloat(ethers.formatEther(wei));
+  if (f === 0) return "0";
+  if (f < 0.000001) return f.toExponential(2);
+  if (f < 1) return f.toFixed(dec);
+  if (f < 1000) return f.toFixed(4);
+  if (f < 1e6) return (f/1000).toFixed(2) + "K";
+  if (f < 1e9) return (f/1e6).toFixed(2) + "M";
+  return (f/1e9).toFixed(2) + "B";
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById("statusMsg");
+  el.textContent = msg;
+  el.className = "status-msg show " + type;
+  if (type === "ok") setTimeout(() => el.className = "status-msg", 5000);
+}
+
+async function connectWallet() {
+  try {
+    if (!window.ethereum) { alert("Install MetaMask or a Web3 wallet"); return; }
+    provider = new ethers.BrowserProvider(window.ethereum);
+    const network = await provider.getNetwork();
+    if (Number(network.chainId) !== BASE_CHAIN_ID) {
+      try {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x2105" }]
+        });
+      } catch (e) {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [{ chainId: "0x2105", chainName: "Base", rpcUrls: ["https://mainnet.base.org"], nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 }, blockExplorerUrls: ["https://basescan.org"] }]
+        });
+      }
+      provider = new ethers.BrowserProvider(window.ethereum);
+    }
+    signer = await provider.getSigner();
+    userAddr = await signer.getAddress();
+    router = new ethers.Contract(ROUTER, ROUTER_ABI, signer);
+    token = new ethers.Contract(TOKEN, TOKEN_ABI, signer);
+
+    document.getElementById("connectSection").style.display = "none";
+    document.getElementById("swapSection").style.display = "block";
+    document.getElementById("walletAddr").textContent = userAddr.slice(0, 6) + "..." + userAddr.slice(-4);
+
+    refreshBalances();
+    refreshStats();
+    setInterval(refreshBalances, 10000);
+    setInterval(refreshStats, 15000);
+  } catch (e) {
+    alert("Connection failed: " + e.message);
+  }
+}
+
+async function refreshBalances() {
+  try {
+    const [ethBal, bsltBal] = await Promise.all([
+      provider.getBalance(userAddr),
+      token.balanceOf(userAddr),
+    ]);
+    document.getElementById("ethBal").textContent = "BAL: " + fmt(ethBal, 4) + " ETH";
+    document.getElementById("ethBal").dataset.raw = ethBal.toString();
+    document.getElementById("bsltBal").textContent = "BAL: " + fmt(bsltBal) + " BSLT";
+    document.getElementById("bsltBal").dataset.raw = bsltBal.toString();
+  } catch (e) { console.error(e); }
+}
+
+async function refreshStats() {
+  try {
+    const readRouter = new ethers.Contract(ROUTER, ROUTER_ABI, provider);
+    const [spot, iv, treasury, grad] = await Promise.all([
+      readRouter.spotPrice(), readRouter.iv(), readRouter.realETH(), readRouter.graduated(),
+    ]);
+    document.getElementById("spotPrice").textContent = fmt(spot) + " ETH";
+    document.getElementById("ivPrice").textContent = fmt(iv) + " ETH";
+    document.getElementById("treasury").textContent = fmt(treasury) + " ETH";
+    document.getElementById("gradStatus").textContent = grad ? "GRADUATED" : "BONDING CURVE";
+  } catch (e) { console.error(e); }
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById("tabBuy").className = m === 'buy' ? 'tab active' : 'tab';
+  document.getElementById("tabSell").className = m === 'sell' ? 'tab active' : 'tab';
+  document.getElementById("buyPanel").style.display = m === 'buy' ? 'block' : 'none';
+  document.getElementById("sellPanel").style.display = m === 'sell' ? 'block' : 'none';
+}
+
+function maxEth() {
+  const raw = document.getElementById("ethBal").dataset.raw;
+  if (!raw) return;
+  const max = BigInt(raw) - ethers.parseEther("0.0001"); // keep gas
+  if (max <= 0n) return;
+  const maxEther = ethers.formatEther(max > ethers.parseEther("0.005") ? ethers.parseEther("0.005") : max);
+  document.getElementById("buyInput").value = maxEther;
+  estimateBuy();
+}
+
+function maxBslt() {
+  const raw = document.getElementById("bsltBal").dataset.raw;
+  if (!raw || raw === "0") return;
+  document.getElementById("sellInput").value = ethers.formatEther(raw);
+  estimateSellAmt();
+}
+
+async function estimateBuy() {
+  const val = document.getElementById("buyInput").value;
+  const btn = document.getElementById("buyBtn");
+  if (!val || isNaN(val) || parseFloat(val) <= 0) {
+    document.getElementById("buyEstimate").textContent = "-- BSLT";
+    document.getElementById("buyBurned").textContent = "--";
+    btn.disabled = true;
+    return;
+  }
+  try {
+    const wei = ethers.parseEther(val);
+    const readRouter = new ethers.Contract(ROUTER, ROUTER_ABI, provider);
+    const [tokOut, burned] = await readRouter.estimateBuy(wei);
+    document.getElementById("buyEstimate").textContent = fmt(tokOut) + " BSLT";
+    document.getElementById("buyBurned").textContent = fmt(burned) + " (deflation)";
+    btn.disabled = false;
+  } catch (e) {
+    document.getElementById("buyEstimate").textContent = "Error";
+    btn.disabled = true;
+  }
+}
+
+async function estimateSellAmt() {
+  const val = document.getElementById("sellInput").value;
+  const btn = document.getElementById("sellBtn");
+  if (!val || isNaN(val) || parseFloat(val) <= 0) {
+    document.getElementById("sellEstimate").textContent = "-- ETH";
+    btn.disabled = true;
+    return;
+  }
+  try {
+    const wei = ethers.parseEther(val);
+    const readRouter = new ethers.Contract(ROUTER, ROUTER_ABI, provider);
+    const ethOut = await readRouter.estimateSell(wei);
+    document.getElementById("sellEstimate").textContent = fmt(ethOut) + " ETH";
+    btn.disabled = false;
+  } catch (e) {
+    document.getElementById("sellEstimate").textContent = "Error";
+    btn.disabled = true;
+  }
+}
+
+async function doBuy() {
+  const val = document.getElementById("buyInput").value;
+  if (!val) return;
+  const btn = document.getElementById("buyBtn");
+  btn.disabled = true;
+  btn.textContent = "CONFIRMING...";
+  showStatus("Waiting for wallet confirmation...", "pending");
+  try {
+    const wei = ethers.parseEther(val);
+    const tx = await router.buy(0, { value: wei });
+    showStatus("TX submitted: " + tx.hash.slice(0, 10) + "...", "pending");
+    btn.textContent = "PENDING...";
+    await tx.wait();
+    showStatus("Buy successful!", "ok");
+    document.getElementById("buyInput").value = "";
+    document.getElementById("buyEstimate").textContent = "-- BSLT";
+    refreshBalances();
+    refreshStats();
+  } catch (e) {
+    showStatus(e.reason || e.message || "Transaction failed", "err");
+  }
+  btn.disabled = false;
+  btn.textContent = "BUY BSLT";
+}
+
+async function doSell() {
+  const val = document.getElementById("sellInput").value;
+  if (!val) return;
+  const btn = document.getElementById("sellBtn");
+  btn.disabled = true;
+  btn.textContent = "CONFIRMING...";
+  const wei = ethers.parseEther(val);
+
+  try {
+    // Check allowance
+    const allowance = await token.allowance(userAddr, ROUTER);
+    if (allowance < wei) {
+      showStatus("Approving BSLT spend...", "pending");
+      const appTx = await token.approve(ROUTER, ethers.MaxUint256);
+      await appTx.wait();
+      showStatus("Approved. Now selling...", "pending");
+    }
+
+    showStatus("Waiting for wallet confirmation...", "pending");
+    const tx = await router.sell(wei, 0);
+    showStatus("TX submitted: " + tx.hash.slice(0, 10) + "...", "pending");
+    btn.textContent = "PENDING...";
+    await tx.wait();
+    showStatus("Sell successful! ETH returned.", "ok");
+    document.getElementById("sellInput").value = "";
+    document.getElementById("sellEstimate").textContent = "-- ETH";
+    refreshBalances();
+    refreshStats();
+  } catch (e) {
+    showStatus(e.reason || e.message || "Transaction failed", "err");
+  }
+  btn.disabled = false;
+  btn.textContent = "SELL BSLT";
+}
+
+function copyToken(e) {
+  e.preventDefault();
+  navigator.clipboard.writeText(TOKEN);
+  e.target.textContent = "COPIED!";
+  setTimeout(() => e.target.textContent = "COPY TOKEN", 2000);
+}
+
+// Auto-detect account changes
+if (window.ethereum) {
+  window.ethereum.on("accountsChanged", () => location.reload());
+  window.ethereum.on("chainChanged", () => location.reload());
+}
+</script>
+</body>
+</html>

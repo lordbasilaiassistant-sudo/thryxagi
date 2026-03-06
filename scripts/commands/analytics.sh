@@ -10,6 +10,19 @@ analytics_pull() {
   local dex_base
   dex_base=$(jq -r '.apis.dexScreener' "$STATE_DIR/config.json")
 
+  # Sync analytics.json with tokens.json (add missing entries)
+  local synced
+  synced=$(jq -s '
+    . as [$tokens, $analytics] |
+    ($analytics | map({(.ticker): .}) | add // {}) as $existing |
+    [$tokens[] | .ticker as $t |
+      if $existing[$t] then $existing[$t]
+      else {ticker: $t, address: .address, chain: .chain, volume24h: 0, price: null, fdv: null, txns24h: 0, lastPulled: null}
+      end
+    ]
+  ' "$STATE_DIR/tokens.json" "$STATE_DIR/analytics.json")
+  echo "$synced" > "$STATE_DIR/analytics.json"
+
   # Pull Base chain tokens from DexScreener
   echo "Fetching Base tokens from DexScreener..."
 

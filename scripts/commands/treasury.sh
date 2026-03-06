@@ -49,6 +49,5 @@ OBSD_BAL=$(eth_to_human "$OBSD_BAL_WEI")
 echo "OBSD Available:    $OBSD_BAL OBSD (payroll fund)"
 
 # Update state
-local today 2>/dev/null || true
 today=$(date -u +%Y-%m-%d)
 state_update treasury.json ".ethBalance = \"$BAL\" | .obsdRealEth = \"$REAL_ETH\" | .lastUpdated = \"$today\""

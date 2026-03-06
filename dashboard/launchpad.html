@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBSD LAUNCHPAD // Creator Economy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #030303;
+    --surface: #0a0a0a;
+    --surface-raised: #0f0f0f;
+    --surface-hover: #141414;
+    --border: #1a1a1a;
+    --border-bright: #2a2a2a;
+    --phosphor: #8B5CF6;
+    --phosphor-dim: #7C3AED;
+    --phosphor-glow: rgba(139, 92, 246, 0.15);
+    --phosphor-ghost: rgba(139, 92, 246, 0.05);
+    --phosphor-intense: rgba(139, 92, 246, 0.4);
+    --amber: #ffb000;
+    --amber-dim: rgba(255, 176, 0, 0.6);
+    --amber-ghost: rgba(255, 176, 0, 0.08);
+    --crimson: #ff2d2d;
+    --cyan: #00e5ff;
+    --green: #00ff41;
+    --green-glow: rgba(0, 255, 65, 0.15);
+    --text: #c8c8c8;
+    --text-dim: #666;
+    --text-faint: #3a3a3a;
+    --text-bright: #e8e8e8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--void);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px;
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  .shell {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 24px 20px 80px;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    text-align: center;
+    padding: 48px 0 40px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--amber);
+    border: 1px solid rgba(255,176,0,0.3);
+    padding: 4px 14px;
+    margin-bottom: 20px;
+    background: var(--amber-ghost);
+  }
+
+  .hero h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--text-bright);
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 .hl { color: var(--phosphor); text-shadow: 0 0 30px var(--phosphor-glow); }
+
+  .hero-sub {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    max-width: 520px;
+    margin: 0 auto 28px;
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .hero-stat-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--phosphor);
+    text-shadow: 0 0 20px var(--phosphor-glow);
+  }
+
+  .hero-stat-label {
+    font-size: 0.5rem;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+
+  /* ===== HOW IT WORKS ===== */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.15s forwards;
+  }
+
+  @media (max-width: 700px) { .steps { grid-template-columns: 1fr; } }
+
+  .step {
+    background: var(--surface);
+    padding: 28px 22px;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .step:hover { background: var(--surface-hover); }
+
+  .step-num {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--border-bright);
+    position: absolute;
+    top: 14px;
+    right: 18px;
+  }
+
+  .step-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-bright);
+    margin-bottom: 10px;
+  }
+
+  .step-desc {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  .step-desc strong { color: var(--amber); font-weight: 500; }
+
+  /* ===== FLYWHEEL ===== */
+  .flywheel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.25s forwards;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .flywheel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--phosphor), transparent);
+    opacity: 0.5;
+  }
+
+  .fw-vis {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    position: relative;
+  }
+
+  .fw-ring {
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--border-bright);
+    border-top-color: var(--phosphor);
+    border-radius: 50%;
+    animation: spin 3s linear infinite;
+  }
+
+  .fw-ring-inner {
+    position: absolute;
+    inset: 12px;
+    border: 2px solid var(--border);
+    border-right-color: var(--amber);
+    border-radius: 50%;
+    animation: spin 2s linear infinite reverse;
+  }
+
+  .fw-dot {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px; height: 8px;
+    background: var(--phosphor);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--phosphor-intense);
+  }
+
+  .fw-title {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--phosphor);
+    margin-bottom: 8px;
+  }
+
+  .fw-flow {
+    font-size: 0.55rem;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  .fw-flow .a { color: var(--text-faint); margin: 0 4px; }
+  .fw-flow .n { color: var(--amber); }
+
+  /* ===== PANELS ===== */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.3s forwards;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-title {
+    font-size: 0.6rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+  }
+
+  .panel-tag {
+    font-size: 0.5rem;
+    padding: 2px 8px;
+    border: 1px solid var(--border-bright);
+    color: var(--text-faint);
+  }
+
+  .tag-live {
+    border-color: var(--green);
+    color: var(--green);
+    padding-left: 16px;
+    position: relative;
+  }
+
+  .tag-live::before {
+    content: '';
+    position: absolute;
+    left: 6px; top: 50%;
+    transform: translateY(-50%);
+    width: 5px; height: 5px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--green);
+    animation: blink 2s infinite;
+  }
+
+  .panel-body { padding: 22px 20px; }
+
+  /* ===== FORM ===== */
+  .form-group { margin-bottom: 18px; }
+
+  .form-label {
+    display: block;
+    font-size: 0.5rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 12px 14px;
+    background: var(--void);
+    border: 1px solid var(--border);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .form-input:focus {
+    border-color: var(--phosphor);
+    box-shadow: 0 0 12px var(--phosphor-ghost);
+  }
+
+  .form-input::placeholder { color: var(--text-faint); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+  .form-hint {
+    font-size: 0.5rem;
+    color: var(--text-faint);
+    margin-top: 6px;
+  }
+
+  .form-hint .hl { color: var(--amber); }
+
+  .payout-box {
+    background: var(--amber-ghost);
+    border: 1px solid rgba(255,176,0,0.2);
+    padding: 14px;
+    margin-bottom: 18px;
+  }
+
+  .payout-box .form-label { color: var(--amber); }
+  .payout-box .form-hint { color: var(--amber-dim); }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    font-family: inherit;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 14px 28px;
+    border: 1px solid var(--phosphor);
+    background: transparent;
+    color: var(--phosphor);
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--phosphor);
+    transform: translateX(-101%);
+    transition: transform 0.3s ease;
+    z-index: 0;
+  }
+
+  .btn:hover:not(:disabled)::before { transform: translateX(0); }
+  .btn:hover:not(:disabled) { color: #000; box-shadow: 0 0 30px var(--phosphor-glow); }
+  .btn span { position: relative; z-index: 1; }
+  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .btn-full { width: 100%; }
+
+  .btn-green { border-color: var(--green); color: var(--green); }
+  .btn-green::before { background: var(--green); }
+  .btn-green:hover:not(:disabled) { box-shadow: 0 0 30px var(--green-glow); }
+
+  /* ===== STATUS LOG ===== */
+  .status-log {
+    background: var(--void);
+    border: 1px solid var(--border);
+    padding: 14px;
+    margin-top: 16px;
+    max-height: 160px;
+    overflow-y: auto;
+    display: none;
+  }
+
+  .status-log.visible { display: block; }
+
+  .log-entry { font-size: 0.55rem; margin-bottom: 5px; line-height: 1.5; }
+  .log-entry .ts { color: var(--text-faint); }
+  .log-entry .msg-ok { color: var(--green); }
+  .log-entry .msg-err { color: var(--crimson); }
+  .log-entry .msg-warn { color: var(--amber); }
+
+  /* ===== QUEUE RESULT ===== */
+  .queue-result {
+    display: none;
+    background: rgba(0, 255, 65, 0.04);
+    border: 1px solid rgba(0, 255, 65, 0.3);
+    padding: 18px;
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  .queue-result.visible { display: block; }
+  .queue-result h3 { font-size: 0.7rem; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+  .queue-result p { font-size: 0.55rem; color: var(--text-dim); line-height: 1.6; }
+
+  /* ===== FEED ===== */
+  .feed-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item:hover { background: var(--surface-hover); }
+
+  .feed-avatar {
+    width: 36px; height: 36px;
+    border-radius: 4px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--phosphor);
+    flex-shrink: 0;
+    border: 1px solid var(--border-bright);
+  }
+
+  .feed-info { flex: 1; min-width: 0; }
+
+  .feed-name { font-size: 0.7rem; font-weight: 600; color: var(--text-bright); }
+  .feed-sym { font-size: 0.55rem; color: var(--phosphor); margin-left: 6px; }
+
+  .feed-meta {
+    font-size: 0.5rem;
+    color: var(--text-faint);
+    margin-top: 3px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .feed-meta a {
+    color: var(--text-dim);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    transition: color 0.2s;
+  }
+  .feed-meta a:hover { color: var(--phosphor); border-color: var(--phosphor); }
+
+  .feed-obsd { font-size: 0.6rem; color: var(--amber); font-weight: 500; flex-shrink: 0; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-faint);
+    font-size: 0.6rem;
+  }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--border-bright);
+    border-top-color: var(--phosphor);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* ===== CONTRACTS BAR ===== */
+  .contracts {
+    display: flex;
+    gap: 1px;
+    background: var(--border);
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.35s forwards;
+  }
+
+  .contract-chip {
+    background: var(--surface);
+    padding: 10px 14px;
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .cc-label { font-size: 0.45rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-faint); margin-bottom: 4px; }
+  .cc-addr { font-size: 0.55rem; color: var(--phosphor); word-break: break-all; }
+  .cc-addr a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border); }
+  .cc-addr a:hover { border-color: var(--phosphor); }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align: center;
+    padding: 32px 0;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.5s forwards;
+  }
+
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 14px;
+  }
+
+  .footer-links a {
+    font-size: 0.5rem;
+    color: var(--text-faint);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--phosphor); }
+
+  .footer-copy { font-size: 0.45rem; color: var(--text-faint); letter-spacing: 1px; }
+  .footer-copy .obsd { color: var(--phosphor); }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--void); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">OBSD Creator Economy // Base Chain</div>
+    <h1>Launch Your Token<br><span class="hl">Earn OBSD Forever</span></h1>
+    <p class="hero-sub">
+      Deploy a token for FREE. Every swap auto-pays you OBSD.
+      No gas. No wallet needed. Just name it and earn.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-value" id="statLaunches">--</div>
+        <div class="hero-stat-label">Tokens Launched</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">3%</div>
+        <div class="hero-stat-label">Auto Fee</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">50/50</div>
+        <div class="hero-stat-label">Creator Split</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">$0</div>
+        <div class="hero-stat-label">Gas Cost</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Name Your Token</div>
+      <div class="step-desc">Pick a name, symbol, and set your <strong>OBSD earning wallet address</strong>. That's it. No wallet connection required.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">We Deploy Free</div>
+      <div class="step-desc">Our platform deploys your token + creates an Aerodrome pool paired with OBSD. <strong>Zero gas cost to you.</strong></div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">Earn OBSD Forever</div>
+      <div class="step-desc">Every swap takes 3% fee, swaps it to OBSD, and <strong>auto-sends 50% to your wallet</strong>. No claiming needed.</div>
+    </div>
+  </div>
+
+  <!-- FLYWHEEL -->
+  <div class="flywheel">
+    <div class="fw-vis">
+      <div class="fw-ring"></div>
+      <div class="fw-ring-inner"></div>
+      <div class="fw-dot"></div>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div class="fw-title">The OBSD Flywheel</div>
+      <div class="fw-flow">
+        <span class="n">Trade happens</span><span class="a">&rarr;</span>3% fee<span class="a">&rarr;</span><span class="n">Swapped to OBSD</span><span class="a">&rarr;</span>50% to creator<span class="a">&rarr;</span><span class="n">50% to treasury</span><span class="a">&rarr;</span>more launches<span class="a">&rarr;</span><span class="n">repeat forever</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAUNCH FORM -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Launch Your Token</span>
+      <span class="panel-tag">Free Deploy</span>
+    </div>
+    <div class="panel-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Token Name</label>
+          <input type="text" class="form-input" id="tokenName" placeholder="Degen Ape" maxlength="32">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Token Symbol</label>
+          <input type="text" class="form-input" id="tokenSymbol" placeholder="DAPE" maxlength="8"
+                 oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+        </div>
+      </div>
+
+      <!-- PAYOUT ADDRESS (highlighted) -->
+      <div class="payout-box">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Your OBSD Earning Wallet</label>
+          <input type="text" class="form-input" id="payoutAddr" placeholder="0x... (your wallet that receives OBSD earnings)">
+          <div class="form-hint">
+            This wallet receives <span class="hl">50% of all swap fees as OBSD</span> automatically on every trade. Cannot be changed after deploy.
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Token Description (optional)</label>
+        <input type="text" class="form-input" id="tokenDesc" placeholder="A brief description of your token" maxlength="200">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Image URL (optional)</label>
+        <input type="text" class="form-input" id="tokenImage" placeholder="https://... (square image, 256x256+)">
+      </div>
+
+      <button class="btn btn-green btn-full" id="launchBtn" onclick="submitLaunch()">
+        <span>Submit Token Launch</span>
+      </button>
+
+      <div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <span style="font-size:0.5rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:2px">Or submit via GitHub (gasless)</span>
+        <div style="margin-top:8px">
+          <a id="ghIssueLink" href="#" target="_blank" class="btn" style="display:inline-block;font-size:0.55rem;padding:10px 20px" onclick="return openGitHubIssue()">
+            <span>Open GitHub Issue</span>
+          </a>
+        </div>
+        <div style="font-size:0.45rem;color:var(--text-faint);margin-top:8px;line-height:1.6">
+          Files a GitHub Issue that our deploy bot picks up automatically.<br>
+          No wallet connection needed. Fully gasless. Deploys within minutes.
+        </div>
+      </div>
+
+      <div class="status-log" id="statusLog"></div>
+
+      <div class="queue-result" id="queueResult">
+        <h3>Launch Queued!</h3>
+        <p>
+          Your token has been added to the deploy queue.<br>
+          Our agents will deploy it within minutes. No action needed from you.<br>
+          Watch the live feed below for your token to appear.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTRACTS -->
+  <div class="contracts">
+    <div class="contract-chip">
+      <div class="cc-label">OBSD Token</div>
+      <div class="cc-addr"><a href="https://basescan.org/address/0x291AaF4729BaB2528B08d8fE248272b208Ce84FF" target="_blank">0x291AaF...Ce84FF</a></div>
+    </div>
+    <div class="contract-chip">
+      <div class="cc-label">LaunchPad</div>
+      <div class="cc-addr"><a href="https://basescan.org/address/0xFD8F5C2DAb7C5F2954ba43c0ae85BF94601C06C1" target="_blank">0xFD8F5C...06C1</a></div>
+    </div>
+    <div class="contract-chip">
+      <div class="cc-label">Platform Router</div>
+      <div class="cc-addr"><a href="https://basescan.org/address/0x29b41D0FaE0ac1491001909E340D0BA58B28a701" target="_blank">0x29b41D...a701</a></div>
+    </div>
+    <div class="contract-chip">
+      <div class="cc-label">Chain</div>
+      <div class="cc-addr" style="color:var(--cyan)">Base (8453)</div>
+    </div>
+  </div>
+
+  <!-- LIVE FEED -->
+  <div class="panel" style="animation-delay:0.4s">
+    <div class="panel-header">
+      <span class="panel-title">Live Feed</span>
+      <span class="panel-tag tag-live">Live</span>
+    </div>
+    <div id="feedBody" style="padding:0">
+      <div class="empty-state"><span class="loading-spinner"></span> Loading token feed...</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-links">
+      <a href="deploy.html">Advanced Deploy</a>
+      <a href="flywheel.html">Flywheel</a>
+      <a href="swap.html">Swap</a>
+      <a href="index.html">Dashboard</a>
+    </div>
+    <div class="footer-copy">
+      Powered by <span class="obsd">OBSD</span> // THRYXAGI Creator Economy // Base Mainnet
+    </div>
+  </div>
+
+</div>
+
+<script>
+const FACTORY_ADDR = '0xb696F67394609A6C176Ade745721Fd81b1650776';
+const BASE_RPC = 'https://mainnet.base.org';
+const BASESCAN = 'https://basescan.org';
+const QUEUE_KEY = 'obsd_launch_queue';
+
+function log(msg, type) {
+  const el = document.getElementById('statusLog');
+  el.classList.add('visible');
+  const ts = new Date().toLocaleTimeString();
+  const cls = type === 'ok' ? 'msg-ok' : type === 'err' ? 'msg-err' : 'msg-warn';
+  el.innerHTML += '<div class="log-entry"><span class="ts">[' + ts + ']</span> <span class="' + cls + '">' + msg + '</span></div>';
+  el.scrollTop = el.scrollHeight;
+}
+
+const GH_REPO = 'lordbasilaiassistant-sudo/thryxagi';
+
+function openGitHubIssue() {
+  const name = document.getElementById('tokenName').value.trim();
+  const symbol = document.getElementById('tokenSymbol').value.trim();
+  const payout = document.getElementById('payoutAddr').value.trim();
+  const desc = document.getElementById('tokenDesc').value.trim();
+
+  // Build pre-filled issue body
+  const body = [
+    '## Token Details',
+    '',
+    '**Token Name:** ' + (name || '(fill in)'),
+    '**Token Symbol:** ' + (symbol || '(fill in)'),
+    '**Payout Address:** ' + (payout || '0x(fill in)'),
+    desc ? '**Description:** ' + desc : '',
+    '',
+    '---',
+    '',
+    '```yaml',
+    'name: ' + (name || ''),
+    'symbol: ' + (symbol || ''),
+    'payout: "' + (payout || '0x') + '"',
+    '```',
+  ].filter(Boolean).join('\n');
+
+  const title = '[LAUNCH] ' + (symbol ? '$' + symbol : 'New Token') + (name ? ' - ' + name : '');
+  const url = 'https://github.com/' + GH_REPO + '/issues/new?labels=launch-request&title=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(body);
+
+  window.open(url, '_blank');
+  return false;
+}
+
+function submitLaunch() {
+  const name = document.getElementById('tokenName').value.trim();
+  const symbol = document.getElementById('tokenSymbol').value.trim();
+  const payout = document.getElementById('payoutAddr').value.trim();
+  const desc = document.getElementById('tokenDesc').value.trim();
+  const image = document.getElementById('tokenImage').value.trim();
+
+  if (!name) { log('Token name is required.', 'err'); return; }
+  if (!symbol || symbol.length < 2) { log('Symbol must be 2-8 characters.', 'err'); return; }
+  if (!payout) { log('Earning wallet address is required.', 'err'); return; }
+  if (!/^0x[a-fA-F0-9]{40}$/.test(payout)) { log('Invalid wallet address. Must be 0x + 40 hex chars.', 'err'); return; }
+
+  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+  queue.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    name, symbol, payout, desc, image,
+    status: 'queued',
+    timestamp: new Date().toISOString()
+  });
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+
+  log('Token "' + name + '" ($' + symbol + ') queued!', 'ok');
+  log('Earning wallet: ' + payout, 'ok');
+  log('Our agents will deploy this within minutes.', 'warn');
+
+  document.getElementById('queueResult').classList.add('visible');
+  document.getElementById('tokenName').value = '';
+  document.getElementById('tokenSymbol').value = '';
+  document.getElementById('payoutAddr').value = '';
+  document.getElementById('tokenDesc').value = '';
+  document.getElementById('tokenImage').value = '';
+}
+
+function decodeHex(hex) {
+  let s = '';
+  for (let i = 0; i < hex.length; i += 2) {
+    const c = parseInt(hex.slice(i, i + 2), 16);
+    if (c === 0) break;
+    s += String.fromCharCode(c);
+  }
+  return s;
+}
+
+function timeAgo(ts) {
+  const d = Math.floor(Date.now() / 1000) - ts;
+  if (d < 60) return 'just now';
+  if (d < 3600) return Math.floor(d / 60) + 'm ago';
+  if (d < 86400) return Math.floor(d / 3600) + 'h ago';
+  return Math.floor(d / 86400) + 'd ago';
+}
+
+async function rpc(method, params) {
+  const r = await fetch(BASE_RPC, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params })
+  });
+  return (await r.json()).result;
+}
+
+async function loadFeed() {
+  const body = document.getElementById('feedBody');
+  try {
+    const totalHex = await rpc('eth_call', [{ to: FACTORY_ADDR, data: '0xe412cfa0' }, 'latest']);
+    const total = parseInt(totalHex, 16);
+    document.getElementById('statLaunches').textContent = total;
+
+    if (total === 0) {
+      body.innerHTML = '<div class="empty-state">No tokens launched yet. Be the first!</div>';
+      return;
+    }
+
+    const start = Math.max(0, total - 20);
+    let html = '';
+
+    for (let i = total - 1; i >= start; i--) {
+      try {
+        const idHex = i.toString(16).padStart(64, '0');
+        const result = await rpc('eth_call', [{ to: FACTORY_ADDR, data: '0x4b21a0c6' + idHex }, 'latest']);
+        if (!result || result === '0x') continue;
+
+        const c = result.slice(2);
+        const token = '0x' + c.slice(24, 64);
+        const pool = '0x' + c.slice(88, 128);
+
+        const nOff = parseInt(c.slice(128, 192), 16) * 2;
+        const nLen = parseInt(c.slice(nOff, nOff + 64), 16);
+        const tokenName = decodeHex(c.slice(nOff + 64, nOff + 64 + nLen * 2));
+
+        const sOff = parseInt(c.slice(192, 256), 16) * 2;
+        const sLen = parseInt(c.slice(sOff, sOff + 64), 16);
+        const sym = decodeHex(c.slice(sOff + 64, sOff + 64 + sLen * 2));
+
+        const obsd = parseInt(c.slice(320, 384), 16) / 1e18;
+        const obsdF = obsd >= 1000 ? (obsd / 1000).toFixed(0) + 'K' : obsd.toFixed(0);
+        const ts = parseInt(c.slice(384, 448), 16);
+
+        const shortTk = token.slice(0, 6) + '...' + token.slice(-4);
+
+        html += '<div class="feed-item">';
+        html += '<div class="feed-avatar">' + sym.slice(0, 2) + '</div>';
+        html += '<div class="feed-info">';
+        html += '<div><span class="feed-name">' + tokenName + '</span><span class="feed-sym">$' + sym + '</span></div>';
+        html += '<div class="feed-meta">';
+        html += '<a href="' + BASESCAN + '/address/' + token + '" target="_blank">' + shortTk + '</a>';
+        html += '<span>' + timeAgo(ts) + '</span>';
+        html += '</div></div>';
+        html += '<div class="feed-obsd">' + obsdF + ' OBSD</div>';
+        html += '</div>';
+      } catch (e) { console.error(e); }
+    }
+
+    body.innerHTML = html || '<div class="empty-state">No tokens found.</div>';
+  } catch (e) {
+    console.error(e);
+    body.innerHTML = '<div class="empty-state" style="color:var(--crimson)">Failed to load feed.</div>';
+  }
+}
+
+loadFeed();
+</script>
+</body>
+</html>

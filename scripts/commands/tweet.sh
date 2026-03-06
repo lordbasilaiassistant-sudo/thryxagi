@@ -9,7 +9,7 @@ tweet_post() {
   echo "Text: ${text:0:80}..."
 
   local result
-  result=$(python3 "$SCRIPT_DIR/scripts/lib/twitter.py" "$text" 2>&1)
+  result=$(python3 "$PROJECT_ROOT/scripts/lib/twitter.py" "$text" 2>&1)
   local ok
   ok=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('ok', False))" 2>/dev/null || echo "False")
 

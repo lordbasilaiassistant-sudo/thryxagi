@@ -1,0 +1,35 @@
+{
+  "name": "@thryxagi/obsd-launchpad",
+  "version": "1.0.0",
+  "description": "MCP server for deploying tokens on the OBSD LaunchPad",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "obsd-launchpad": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "obsd",
+    "launchpad",
+    "base",
+    "token",
+    "deploy",
+    "agent"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "ethers": "^6.13.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  }
+}

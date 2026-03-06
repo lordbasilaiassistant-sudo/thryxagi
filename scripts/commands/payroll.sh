@@ -28,13 +28,13 @@ payroll_status() {
   echo ""
 
   echo "Agent wallets and OBSD balances:"
-  jq -r '.agents | to_entries[] | "\(.key) \(.value.address)"' "$STATE_DIR/wallets.json" | while read -r agent_name addr; do
+  while read -r agent_name addr; do
     local obsd_bal_wei
     obsd_bal_wei=$(chain_call "$OBSD_TOKEN" "balanceOf(address)(uint256)" "$addr" 2>/dev/null || echo "0")
     local obsd_bal
     obsd_bal=$(eth_to_human "$obsd_bal_wei")
     echo "  $agent_name: $addr — $obsd_bal OBSD"
-  done
+  done < <(jq -r '.agents | to_entries[] | "\(.key) \(.value.address)"' "$STATE_DIR/wallets.json" | tr -d '\r')
   echo ""
 
   local total
@@ -78,12 +78,12 @@ payroll_run() {
   echo "Distributing $amount_human OBSD to $agent_count agents..."
   echo ""
 
-  jq -r '.agents | to_entries[] | "\(.key) \(.value.address)"' "$STATE_DIR/wallets.json" | while read -r agent_name addr; do
+  while read -r agent_name addr; do
     echo "Paying $agent_name ($addr)..."
     OBSD_TOKEN="$OBSD_TOKEN" PAYROLL_RECIPIENT="$addr" PAYROLL_AMOUNT="$amount" \
       forge script script/Payroll.s.sol --rpc-url "$RPC" --broadcast 2>&1 | tail -5
     echo ""
-  done
+  done < <(jq -r '.agents | to_entries[] | "\(.key) \(.value.address)"' "$STATE_DIR/wallets.json" | tr -d '\r')
 
   # Update treasury
   local total_paid

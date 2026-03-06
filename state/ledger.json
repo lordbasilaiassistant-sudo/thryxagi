@@ -1,0 +1,169 @@
+{
+  "session": "2026-03-06-s3",
+  "generated_at": "2026-03-06T23:30:00Z",
+
+  "expenses": [
+    {
+      "type": "deploy",
+      "contract": "EverRise V1 (Token+Router)",
+      "gas_eth": "0.000035064",
+      "tx_count": 1,
+      "note": "Abandoned — V1 design"
+    },
+    {
+      "type": "deploy",
+      "contract": "EverRise V2 (4 attempts x 6 txs)",
+      "gas_eth": "0.000064476",
+      "tx_count": 24,
+      "note": "Multiple deploy attempts before success"
+    },
+    {
+      "type": "deploy",
+      "contract": "OBSD V3 (Token + Router + approve + seed)",
+      "gas_eth": "0.000040483",
+      "tx_count": 4,
+      "note": "Final production deploy — OBSD token + RouterV3"
+    },
+    {
+      "type": "deploy",
+      "contract": "OBSDPairFactory",
+      "gas_eth": "0.000016043",
+      "tx": "0x9cdf56f453c2fdcb5d6dda595139117541ee1654a2956aadcd48153b73af2182",
+      "address": "0xb696f67394609a6c176ade745721fd81b1650776"
+    },
+    {
+      "type": "deploy",
+      "contract": "ChildRouter",
+      "gas_eth": "0.000004433",
+      "tx": "0x20cc80c630c042987ea195f800df90b0a9666f2887aede1c9602cea7f2c59cff",
+      "address": "0xcb7a49ce25093f06028003d51abc47fbe32875de"
+    },
+    {
+      "type": "trading",
+      "description": "Buy txs (OBSD bonding curve, 6 txs)",
+      "gas_eth": "0.000006519",
+      "tx_count": 6
+    },
+    {
+      "type": "trading",
+      "description": "MicroBuy txs (17 txs)",
+      "gas_eth": "0.000015662",
+      "tx_count": 17
+    },
+    {
+      "type": "trading",
+      "description": "MicroSell txs (14 txs)",
+      "gas_eth": "0.000005274",
+      "tx_count": 14
+    },
+    {
+      "type": "trading",
+      "description": "AeroSwap txs (3 txs)",
+      "gas_eth": "0.000007559",
+      "tx_count": 3
+    },
+    {
+      "type": "launch_child",
+      "description": "Batch 1: 5 child tokens (WORK, HIRE, APAY, BOTS, COMP) via Factory",
+      "gas_eth": "0.000082488",
+      "tx_count": 10,
+      "obsd_seeded": "2200000",
+      "note": "500K + 500K + 400K + 400K + 400K OBSD seeded"
+    },
+    {
+      "type": "launch_child",
+      "description": "Batch 2: 10 child tokens (CHAD, AAGENT, RUGP, PAWS, DMODE, NEURAL, BAGS, PUMP, BAGI, FUEL)",
+      "gas_eth": "0.000090722",
+      "tx_count": 20,
+      "obsd_seeded": "100000",
+      "note": "10K OBSD per token"
+    },
+    {
+      "type": "payroll",
+      "description": "OBSD payroll to 5 agent wallets (nova, blaze, sage, forge, nexus)",
+      "gas_eth": "0.000001460",
+      "tx_count": 5,
+      "obsd_distributed": "500000",
+      "note": "100K OBSD each"
+    }
+  ],
+
+  "revenue": [
+    {
+      "type": "creator_fee",
+      "amount_eth": "0.000048",
+      "source": "OBSD RouterV3 (claimed)",
+      "note": "1% fee on buys and sells through bonding curve"
+    },
+    {
+      "type": "creator_fee",
+      "amount_eth": "0",
+      "source": "OBSD RouterV3 (pending)",
+      "note": "Zero pending fees as of ledger close"
+    },
+    {
+      "type": "lp_fees",
+      "amount_eth": "0",
+      "source": "Child pool LP positions (15 pools)",
+      "note": "No trades on any child pool yet — zero fees accrued"
+    }
+  ],
+
+  "obsd_distributed": [
+    {"to": "nova", "address": "0xd70F76F9a6368FD870734CdF4EfD7f9aDED131D4", "amount": "100000", "purpose": "payroll"},
+    {"to": "blaze", "address": "0x2673B60BcdBB240B796b8C773F4b7f83994c02b0", "amount": "100000", "purpose": "payroll"},
+    {"to": "sage", "address": "0x72711779E57e89884c84e6a8ecb8429BA14Cf802", "amount": "100000", "purpose": "payroll"},
+    {"to": "forge", "address": "0x935BfeEbA68BEcf26Ec8640FEDb164b69946ccC5", "amount": "100000", "purpose": "payroll"},
+    {"to": "nexus", "address": "0x5461d543cb5dBb51af1517362AB1d8A85c868287", "amount": "100000", "purpose": "payroll"}
+  ],
+
+  "obsd_seeded": [
+    {"token": "WORK", "amount": "500000", "pool": "0x37EF452c4ee8837b4BFfb4A67D85cBa6B8b6429B"},
+    {"token": "HIRE", "amount": "500000", "pool": "0x1bb0C052C8bb45637450df94768ff024967090Be"},
+    {"token": "APAY", "amount": "400000", "pool": "0x8aA4862c3f15156981D42832D3596FA1DDc913B9"},
+    {"token": "BOTS", "amount": "400000", "pool": "0xaf274E1f99c7fBbE1d8DfDf5e3f8696fEdF89a08"},
+    {"token": "COMP", "amount": "400000", "pool": "0x2E795Cf493Ad4bEdcd00706D52897f48B0Ac69e9"},
+    {"token": "CHAD", "amount": "10000", "pool": "0xf004d7019102998b53a76F6bb782164f4a226b30"},
+    {"token": "AAGENT", "amount": "10000", "pool": "0x81f0C7c854b560B33586E66e8D0cd708ee131b06"},
+    {"token": "RUGP", "amount": "10000", "pool": "0xcB48D1F4BAcC984b2877686Db6C7D25F3AE670e5"},
+    {"token": "PAWS", "amount": "10000", "pool": "0x2a0B921a35077E715eb6d37A9F16119fBe9Ec4ee"},
+    {"token": "DMODE", "amount": "10000", "pool": "0xFb030628A14659451e394FE6a243BE1E5C7834Cd"},
+    {"token": "NEURAL", "amount": "10000", "pool": "0xb0150c7E4c4AD433e571827EFe1551F3A2691c49"},
+    {"token": "BAGS", "amount": "10000", "pool": "0x8E1653D6F0a41e99E83Ea82155dBfA3DE0D35e08"},
+    {"token": "PUMP", "amount": "10000", "pool": "0x5b866c0741b3213B4e4761FcDc696411117A86f2"},
+    {"token": "BAGI", "amount": "10000", "pool": "0x8f57F915c8Ea633E8e968B80681B7dAe9510F4A1"},
+    {"token": "FUEL", "amount": "10000", "pool": "0x5186e9c9636Fb12013315F3DfE4c0E5542A86dAF"}
+  ],
+
+  "summary": {
+    "total_gas_spent_eth": "0.000370184",
+    "gas_breakdown": {
+      "deploys": "0.000160499",
+      "trading": "0.000035014",
+      "child_launches": "0.000173210",
+      "payroll": "0.000001460"
+    },
+    "total_eth_earned": "0.000048000",
+    "net_pnl_eth": "-0.000322184",
+    "obsd_distributed_to_agents": "500000",
+    "obsd_seeded_to_pools": "2300000",
+    "obsd_in_aero_pool": "1055691",
+    "obsd_remaining_deployer": "2187170",
+    "eth_remaining_deployer": "0.001543",
+    "eth_in_obsd_treasury": "0.004452",
+    "total_eth_all": "0.005995",
+    "total_txs": 106,
+    "avg_gas_per_tx_eth": "0.0000035",
+    "runway_estimate_txs": "~440 more txs at current avg gas cost before deployer wallet exhausted",
+    "notes": "Net loss of 0.000322 ETH on gas. Revenue only 0.000048 ETH from creator fees (13% of gas costs). All 15 child pools have zero volume. Bankr tokens (13) and pump.fun tokens (4) are dead. OBSD is the only active token with $6.59 total volume.",
+    "profit_split": {
+      "policy": "50/50 — treasury/builders",
+      "cumulative_profit_eth": "-0.000322184",
+      "deficit_carried": "0.000322184",
+      "treasury_share_eth": "0",
+      "builder_share_eth": "0",
+      "builder_share_obsd": "0",
+      "note": "Profit is negative (gas > revenue). No payouts until deficit is cleared. Next profitable claim triggers split."
+    }
+  }
+}

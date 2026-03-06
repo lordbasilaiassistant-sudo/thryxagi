@@ -41,7 +41,7 @@ wallet_balance() {
   agent_count=$(jq '.agents | length' "$STATE_DIR/wallets.json")
   if [ "$agent_count" -gt 0 ]; then
     echo "AGENT WALLETS:"
-    jq -r '.agents | to_entries[] | "\(.key) \(.value.address)"' "$STATE_DIR/wallets.json" | while read -r agent_name addr; do
+    while read -r agent_name addr; do
       local abal
       abal=$(chain_balance "$addr")
       local obsd_bal_wei
@@ -49,7 +49,7 @@ wallet_balance() {
       local obsd_bal
       obsd_bal=$(eth_to_human "$obsd_bal_wei")
       echo "  $agent_name: $addr — $abal ETH, $obsd_bal OBSD"
-    done
+    done < <(jq -r '.agents | to_entries[] | "\(.key) \(.value.address)"' "$STATE_DIR/wallets.json" | tr -d '\r')
     echo ""
   fi
 

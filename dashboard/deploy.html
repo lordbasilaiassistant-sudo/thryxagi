@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBSD TOKEN FACTORY // LAUNCH</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #030303;
+    --surface: #0a0a0a;
+    --surface-raised: #0f0f0f;
+    --border: #1a1a1a;
+    --border-bright: #2a2a2a;
+    --phosphor: #8B5CF6;
+    --phosphor-dim: #7C3AED;
+    --phosphor-glow: rgba(139, 92, 246, 0.15);
+    --phosphor-ghost: rgba(139, 92, 246, 0.05);
+    --amber: #ffb000;
+    --amber-dim: rgba(255, 176, 0, 0.6);
+    --crimson: #ff2d2d;
+    --crimson-dim: rgba(255, 45, 45, 0.6);
+    --cyan: #00e5ff;
+    --cyan-dim: rgba(0, 229, 255, 0.6);
+    --green: #00ff41;
+    --green-glow: rgba(0, 255, 65, 0.15);
+    --text: #c8c8c8;
+    --text-dim: #666;
+    --text-faint: #3a3a3a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--void);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px;
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  .shell {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+    position: relative;
+  }
+
+  /* -- Header -- */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .ascii-title {
+    font-size: 0.5rem;
+    line-height: 1.15;
+    color: var(--phosphor);
+    text-shadow: 0 0 20px var(--phosphor-glow), 0 0 40px var(--phosphor-ghost);
+    letter-spacing: 1px;
+    white-space: pre;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+
+  .header-sub {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .header-sub a {
+    color: var(--text-dim);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    transition: color 0.2s;
+  }
+  .header-sub a:hover { color: var(--phosphor); border-color: var(--phosphor); }
+
+  /* -- Wallet Bar -- */
+  .wallet-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.1s forwards;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .wallet-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.7rem;
+  }
+
+  .wallet-addr {
+    color: var(--phosphor);
+    font-weight: 500;
+  }
+
+  .wallet-balance {
+    color: var(--amber);
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: blink 2s infinite;
+    display: inline-block;
+  }
+
+  .dot-disconnected {
+    background: var(--crimson);
+    box-shadow: 0 0 6px var(--crimson);
+    animation: none;
+  }
+
+  .btn {
+    font-family: inherit;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 10px 20px;
+    border: 1px solid var(--phosphor);
+    background: transparent;
+    color: var(--phosphor);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn:hover:not(:disabled) {
+    background: var(--phosphor);
+    color: #000;
+    box-shadow: 0 0 20px var(--phosphor-glow);
+  }
+
+  .btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.55rem;
+  }
+
+  .btn-amber {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+  .btn-amber:hover:not(:disabled) {
+    background: var(--amber);
+    color: #000;
+    box-shadow: 0 0 20px rgba(255,176,0,0.2);
+  }
+
+  .btn-green {
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .btn-green:hover:not(:disabled) {
+    background: var(--green);
+    color: #000;
+    box-shadow: 0 0 20px var(--green-glow);
+  }
+
+  /* -- Network Warning -- */
+  .network-warning {
+    display: none;
+    background: rgba(255, 45, 45, 0.08);
+    border: 1px solid var(--crimson);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 0.65rem;
+    color: var(--crimson);
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .network-warning.visible { display: flex; }
+
+  /* -- Panels -- */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.2s forwards;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-title {
+    font-size: 0.6rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+  }
+
+  .panel-tag {
+    font-size: 0.5rem;
+    padding: 2px 6px;
+    border: 1px solid var(--border-bright);
+    color: var(--text-faint);
+    letter-spacing: 0.5px;
+  }
+
+  .panel-body { padding: 20px 18px; }
+
+  /* -- Form -- */
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 0.55rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 12px 14px;
+    background: var(--void);
+    border: 1px solid var(--border);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus {
+    border-color: var(--phosphor);
+    box-shadow: 0 0 8px var(--phosphor-ghost);
+  }
+
+  .form-input::placeholder { color: var(--text-faint); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .slider-group input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: var(--border-bright);
+    border-radius: 2px;
+    outline: none;
+  }
+
+  .slider-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--phosphor);
+    cursor: pointer;
+    box-shadow: 0 0 8px var(--phosphor-glow);
+  }
+
+  .slider-group input[type="range"]::-moz-range-thumb {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--phosphor);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 8px var(--phosphor-glow);
+  }
+
+  .slider-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--phosphor);
+    min-width: 48px;
+    text-align: right;
+  }
+
+  .form-hint {
+    font-size: 0.55rem;
+    color: var(--text-faint);
+    margin-top: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  /* -- Status Log -- */
+  .status-log {
+    background: var(--void);
+    border: 1px solid var(--border);
+    padding: 14px;
+    margin-top: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+  }
+
+  .status-log.visible { display: block; }
+
+  .log-entry {
+    font-size: 0.6rem;
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+
+  .log-entry .ts { color: var(--text-faint); }
+  .log-entry .msg { color: var(--text-dim); }
+  .log-entry .msg-ok { color: var(--green); }
+  .log-entry .msg-err { color: var(--crimson); }
+  .log-entry .msg-warn { color: var(--amber); }
+
+  .log-entry a {
+    color: var(--phosphor);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .log-entry a:hover { border-color: var(--phosphor); }
+
+  /* -- Result -- */
+  .deploy-result {
+    display: none;
+    background: rgba(139, 92, 246, 0.05);
+    border: 1px solid var(--phosphor);
+    padding: 18px;
+    margin-top: 16px;
+  }
+
+  .deploy-result.visible { display: block; }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.65rem;
+  }
+
+  .result-row:last-child { border-bottom: none; }
+
+  .result-label {
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.55rem;
+  }
+
+  .result-value {
+    color: var(--phosphor);
+    font-weight: 500;
+    word-break: break-all;
+  }
+
+  .result-value a {
+    color: var(--phosphor);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-value a:hover { border-color: var(--phosphor); }
+
+  /* -- Launches Table -- */
+  .launches-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.6rem;
+  }
+
+  .launches-table th {
+    font-size: 0.5rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-faint);
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .launches-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  .launches-table tr:hover td {
+    background: var(--surface-raised);
+    color: var(--text);
+  }
+
+  .launches-table .addr {
+    color: var(--phosphor);
+    font-size: 0.55rem;
+  }
+
+  .launches-table .addr a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .launches-table .addr a:hover { border-color: var(--phosphor); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-faint);
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+  }
+
+  /* -- Token Trade Cards -- */
+  .token-cards {
+    display: grid;
+    gap: 16px;
+    padding: 18px;
+  }
+
+  .token-card {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    padding: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .token-card:hover { border-color: var(--border-bright); }
+
+  .token-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .token-card-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--phosphor);
+  }
+
+  .token-card-symbol {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    margin-left: 8px;
+  }
+
+  .token-card-links {
+    display: flex;
+    gap: 10px;
+    font-size: 0.5rem;
+  }
+
+  .token-card-links a {
+    color: var(--text-faint);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    transition: color 0.2s;
+  }
+  .token-card-links a:hover { color: var(--phosphor); border-color: var(--phosphor); }
+
+  .token-card-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 0.55rem;
+    color: var(--text-faint);
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .token-card-meta span { color: var(--amber); }
+
+  .trade-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  @media (max-width: 600px) { .trade-row { grid-template-columns: 1fr; } }
+
+  .trade-box {
+    background: var(--void);
+    border: 1px solid var(--border);
+    padding: 12px;
+  }
+
+  .trade-box-title {
+    font-size: 0.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+
+  .trade-box-title.buy-title { color: var(--green); }
+  .trade-box-title.sell-title { color: var(--crimson); }
+
+  .trade-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .trade-input {
+    flex: 1;
+    font-family: inherit;
+    font-size: 0.75rem;
+    padding: 8px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    outline: none;
+    min-width: 0;
+  }
+
+  .trade-input:focus {
+    border-color: var(--phosphor);
+  }
+
+  .trade-input::placeholder { color: var(--text-faint); }
+
+  .trade-quote {
+    font-size: 0.5rem;
+    color: var(--text-faint);
+    margin-top: 6px;
+    min-height: 14px;
+  }
+
+  .trade-quote span { color: var(--cyan); }
+
+  .btn-buy {
+    border-color: var(--green);
+    color: var(--green);
+    white-space: nowrap;
+  }
+  .btn-buy:hover:not(:disabled) {
+    background: var(--green);
+    color: #000;
+    box-shadow: 0 0 20px var(--green-glow);
+  }
+
+  .btn-sell {
+    border-color: var(--crimson);
+    color: var(--crimson);
+    white-space: nowrap;
+  }
+  .btn-sell:hover:not(:disabled) {
+    background: var(--crimson);
+    color: #000;
+    box-shadow: 0 0 20px rgba(255,45,45,0.2);
+  }
+
+  .trade-status {
+    font-size: 0.5rem;
+    margin-top: 6px;
+    min-height: 14px;
+  }
+  .trade-status a {
+    color: var(--phosphor);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .trade-status a:hover { border-color: var(--phosphor); }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--border-bright);
+    border-top-color: var(--phosphor);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* -- Animations -- */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* -- Scrollbar -- */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--void); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Header -->
+  <div class="header">
+    <pre class="ascii-title">
+ ____  ____  _____ ____    _____ ____  ____  _____  ____  ____  _  _
+/  _ \/  _ \/  __//  _ \  /    //  _ \/   _\/__ __\/  _ \/  __\/ \/ \
+| / \|| | //|  \  | | \|  |  __\| / \||  /    / \  | / \||  \/|| || |
+| \_/|| |_\\|  /_ | |_/|  | |   | |-|||  \_   | |  | \_/||    /| || |
+\____/\____/\____\\____/  \_/   \_/ \|\____/  \_/  \____/\_/\_\\_/\_/
+    </pre>
+    <div class="header-sub">
+      Launch tokens paired with Obsidian
+      <span style="color:var(--text-faint);margin:0 6px;">|</span>
+      <a href="index.html">Dashboard</a>
+      <span style="color:var(--text-faint);margin:0 4px;">|</span>
+      <a href="swap.html">Swap</a>
+    </div>
+  </div>
+
+  <!-- Wallet Bar -->
+  <div class="wallet-bar">
+    <div class="wallet-info">
+      <span class="live-dot dot-disconnected" id="statusDot"></span>
+      <span id="walletStatus">Not connected</span>
+      <span class="wallet-balance" id="obsdBalance" style="display:none"></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-sm" id="connectBtn" onclick="connectWallet()">Connect</button>
+      <button class="btn btn-sm btn-amber" id="switchNetBtn" style="display:none" onclick="switchToBase()">Switch to Base</button>
+    </div>
+  </div>
+
+  <!-- Network Warning -->
+  <div class="network-warning" id="networkWarning">
+    Wrong network detected. Please switch to Base (chain ID 8453) to use the factory.
+  </div>
+
+  <!-- Deploy Form -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Deploy New Token</span>
+      <span class="panel-tag">OBSDPairFactory</span>
+    </div>
+    <div class="panel-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Token Name</label>
+          <input type="text" class="form-input" id="tokenName" placeholder="My Token">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Token Symbol</label>
+          <input type="text" class="form-input" id="tokenSymbol" placeholder="TKN">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Total Supply</label>
+          <input type="number" class="form-input" id="tokenSupply" value="1000000000" min="1">
+          <div class="form-hint">Tokens minted (18 decimals applied automatically)</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">OBSD Seed Amount</label>
+          <input type="number" class="form-input" id="obsdAmount" value="500000" min="1">
+          <div class="form-hint">OBSD transferred to seed the pool</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Pool Seed Percentage</label>
+        <div class="slider-group">
+          <input type="range" id="poolPercent" min="1" max="100" value="80">
+          <span class="slider-value" id="poolPercentVal">80%</span>
+        </div>
+        <div class="form-hint">Percentage of new token supply seeded into the liquidity pool</div>
+      </div>
+
+      <button class="btn" id="deployBtn" onclick="deployToken()" disabled>
+        Deploy Token
+      </button>
+
+      <!-- Status Log -->
+      <div class="status-log" id="statusLog"></div>
+
+      <!-- Deploy Result -->
+      <div class="deploy-result" id="deployResult">
+        <div class="result-row">
+          <span class="result-label">Token</span>
+          <span class="result-value" id="resultToken"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Pool</span>
+          <span class="result-value" id="resultPool"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Launched Tokens -->
+  <div class="panel" style="animation-delay:0.35s">
+    <div class="panel-header">
+      <span class="panel-title">Launched Tokens</span>
+      <span class="panel-tag" id="launchCount">--</span>
+    </div>
+    <div class="panel-body" id="launchesBody" style="padding:0">
+      <div class="empty-state"><span class="loading-spinner"></span> Loading launches...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const FACTORY_ADDR = '0xb696F67394609A6C176Ade745721Fd81b1650776';
+const OBSD_ADDR = '0x291AaF4729BaB2528B08d8fE248272b208Ce84FF';
+const BASE_CHAIN_ID = 8453n;
+const BASE_RPC = 'https://mainnet.base.org';
+const BASESCAN = 'https://basescan.org';
+
+const CHILD_ROUTER_ADDR = '0xCb7a49CE25093f06028003D51aBc47fBE32875de';
+
+const CHILD_ROUTER_ABI = [
+  'function buyWithETH(address childToken, uint256 minChildOut) payable',
+  'function sellForETH(address childToken, uint256 childAmount, uint256 minETHOut)',
+  'function quoteETHToChild(address childToken, uint256 ethAmount) view returns (uint256)',
+  'function quoteChildToETH(address childToken, uint256 childAmount) view returns (uint256)'
+];
+
+const ERC20_APPROVE_ABI = [
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function balanceOf(address account) view returns (uint256)',
+  'function decimals() view returns (uint8)',
+  'function symbol() view returns (string)'
+];
+
+const FACTORY_ABI = [
+  'function launch(string name_, string symbol_, uint256 supply_, uint256 obsdAmount_, uint256 tokenSeedPercent_) returns (address token, address pool)',
+  'function totalLaunches() view returns (uint256)',
+  'function launches(uint256) view returns (address token, address pool, string name, string symbol, uint256 supply, uint256 obsdSeeded, uint256 timestamp)',
+  'function owner() view returns (address)'
+];
+
+const ERC20_ABI = [
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function balanceOf(address account) view returns (uint256)'
+];
+
+let provider = null;
+let signer = null;
+let currentChainId = null;
+
+// -- Slider --
+document.getElementById('poolPercent').addEventListener('input', (e) => {
+  document.getElementById('poolPercentVal').textContent = e.target.value + '%';
+});
+
+// -- Wallet --
+async function connectWallet() {
+  if (!window.ethereum) {
+    alert('No wallet detected. Please install MetaMask.');
+    return;
+  }
+  try {
+    provider = new ethers.BrowserProvider(window.ethereum);
+    const accounts = await provider.send('eth_requestAccounts', []);
+    signer = await provider.getSigner();
+    const addr = await signer.getAddress();
+    const network = await provider.getNetwork();
+    currentChainId = network.chainId;
+
+    updateWalletUI(addr);
+    checkNetwork();
+    loadObsdBalance(addr);
+    loadLaunches();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function updateWalletUI(addr) {
+  const short = addr.slice(0, 6) + '...' + addr.slice(-4);
+  document.getElementById('walletStatus').innerHTML = '<span class="wallet-addr">' + short + '</span>';
+  document.getElementById('statusDot').classList.remove('dot-disconnected');
+  document.getElementById('connectBtn').textContent = 'Connected';
+  document.getElementById('connectBtn').disabled = true;
+}
+
+function checkNetwork() {
+  const isBase = currentChainId === BASE_CHAIN_ID;
+  document.getElementById('networkWarning').classList.toggle('visible', !isBase);
+  document.getElementById('switchNetBtn').style.display = isBase ? 'none' : 'inline-block';
+  document.getElementById('deployBtn').disabled = !isBase;
+}
+
+async function switchToBase() {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: '0x' + BASE_CHAIN_ID.toString(16) }]
+    });
+  } catch (e) {
+    if (e.code === 4902) {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: '0x' + BASE_CHAIN_ID.toString(16),
+          chainName: 'Base',
+          nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+          rpcUrls: [BASE_RPC],
+          blockExplorerUrls: [BASESCAN]
+        }]
+      });
+    }
+  }
+}
+
+async function loadObsdBalance(addr) {
+  try {
+    const readProvider = new ethers.JsonRpcProvider(BASE_RPC);
+    const obsd = new ethers.Contract(OBSD_ADDR, ERC20_ABI, readProvider);
+    const bal = await obsd.balanceOf(addr);
+    const formatted = parseFloat(ethers.formatEther(bal)).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    const el = document.getElementById('obsdBalance');
+    el.textContent = formatted + ' OBSD';
+    el.style.display = 'inline';
+  } catch (e) {
+    console.error('Failed to load OBSD balance:', e);
+  }
+}
+
+// -- Logging --
+function log(msg, type) {
+  const el = document.getElementById('statusLog');
+  el.classList.add('visible');
+  const ts = new Date().toLocaleTimeString();
+  const cls = type === 'ok' ? 'msg-ok' : type === 'err' ? 'msg-err' : type === 'warn' ? 'msg-warn' : 'msg';
+  el.innerHTML += '<div class="log-entry"><span class="ts">[' + ts + ']</span> <span class="' + cls + '">' + msg + '</span></div>';
+  el.scrollTop = el.scrollHeight;
+}
+
+// -- Deploy --
+async function deployToken() {
+  const name = document.getElementById('tokenName').value.trim();
+  const symbol = document.getElementById('tokenSymbol').value.trim();
+  const supplyRaw = document.getElementById('tokenSupply').value;
+  const obsdRaw = document.getElementById('obsdAmount').value;
+  const percent = parseInt(document.getElementById('poolPercent').value);
+
+  if (!name || !symbol) { log('Name and symbol are required.', 'err'); return; }
+  if (!supplyRaw || Number(supplyRaw) <= 0) { log('Invalid supply.', 'err'); return; }
+  if (!obsdRaw || Number(obsdRaw) <= 0) { log('Invalid OBSD amount.', 'err'); return; }
+
+  const supply = ethers.parseEther(supplyRaw);
+  const obsdAmount = ethers.parseEther(obsdRaw);
+
+  const btn = document.getElementById('deployBtn');
+  btn.disabled = true;
+  btn.textContent = 'Deploying...';
+
+  document.getElementById('deployResult').classList.remove('visible');
+
+  try {
+    // Step 1: Approve OBSD
+    log('Approving ' + Number(obsdRaw).toLocaleString() + ' OBSD for factory...', 'warn');
+    const obsd = new ethers.Contract(OBSD_ADDR, ERC20_ABI, signer);
+    const approveTx = await obsd.approve(FACTORY_ADDR, obsdAmount);
+    log('Approve tx: <a href="' + BASESCAN + '/tx/' + approveTx.hash + '" target="_blank">' + approveTx.hash.slice(0, 14) + '...</a>');
+    await approveTx.wait();
+    log('Approval confirmed.', 'ok');
+
+    // Step 2: Launch
+    log('Calling factory.launch() with ' + percent + '% pool seed...', 'warn');
+    const factory = new ethers.Contract(FACTORY_ADDR, FACTORY_ABI, signer);
+    const launchTx = await factory.launch(name, symbol, supply, obsdAmount, BigInt(percent));
+    log('Launch tx: <a href="' + BASESCAN + '/tx/' + launchTx.hash + '" target="_blank">' + launchTx.hash.slice(0, 14) + '...</a>');
+
+    const receipt = await launchTx.wait();
+    log('Launch confirmed in block ' + receipt.blockNumber + '.', 'ok');
+
+    // Read the return values from the last launch entry
+    const readProvider = new ethers.JsonRpcProvider(BASE_RPC);
+    const factoryRead = new ethers.Contract(FACTORY_ADDR, FACTORY_ABI, readProvider);
+    const total = await factoryRead.totalLaunches();
+    const launch = await factoryRead.launches(total - 1n);
+
+    const tokenAddr = launch[0];
+    const poolAddr = launch[1];
+
+    document.getElementById('resultToken').innerHTML = '<a href="' + BASESCAN + '/address/' + tokenAddr + '" target="_blank">' + tokenAddr + '</a>';
+    document.getElementById('resultPool').innerHTML = '<a href="' + BASESCAN + '/address/' + poolAddr + '" target="_blank">' + poolAddr + '</a>';
+    document.getElementById('deployResult').classList.add('visible');
+
+    log('Token deployed: ' + tokenAddr, 'ok');
+    log('Pool created: ' + poolAddr, 'ok');
+
+    // Refresh
+    loadLaunches();
+    loadObsdBalance(await signer.getAddress());
+
+  } catch (e) {
+    console.error(e);
+    const reason = e.reason || e.shortMessage || e.message || 'Unknown error';
+    log('Failed: ' + reason, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Deploy Token';
+  }
+}
+
+// -- Debounce helper --
+let quoteTimers = {};
+function debounceQuote(key, fn, delay) {
+  clearTimeout(quoteTimers[key]);
+  quoteTimers[key] = setTimeout(fn, delay || 400);
+}
+
+// -- Quote preview --
+async function fetchBuyQuote(tokenAddr, inputEl) {
+  const quoteEl = document.getElementById('buy-quote-' + tokenAddr);
+  const val = inputEl.value.trim();
+  if (!val || Number(val) <= 0) { quoteEl.innerHTML = ''; return; }
+  debounceQuote('buy-' + tokenAddr, async () => {
+    try {
+      quoteEl.innerHTML = 'quoting...';
+      const readProvider = new ethers.JsonRpcProvider(BASE_RPC);
+      const router = new ethers.Contract(CHILD_ROUTER_ADDR, CHILD_ROUTER_ABI, readProvider);
+      const ethAmount = ethers.parseEther(val);
+      const tokensOut = await router.quoteETHToChild(tokenAddr, ethAmount);
+      const formatted = parseFloat(ethers.formatEther(tokensOut)).toLocaleString(undefined, { maximumFractionDigits: 2 });
+      quoteEl.innerHTML = 'You get ~<span>' + formatted + '</span> tokens';
+    } catch (e) {
+      quoteEl.innerHTML = '<span style="color:var(--crimson)">quote failed</span>';
+    }
+  });
+}
+
+async function fetchSellQuote(tokenAddr, inputEl) {
+  const quoteEl = document.getElementById('sell-quote-' + tokenAddr);
+  const val = inputEl.value.trim();
+  if (!val || Number(val) <= 0) { quoteEl.innerHTML = ''; return; }
+  debounceQuote('sell-' + tokenAddr, async () => {
+    try {
+      quoteEl.innerHTML = 'quoting...';
+      const readProvider = new ethers.JsonRpcProvider(BASE_RPC);
+      const router = new ethers.Contract(CHILD_ROUTER_ADDR, CHILD_ROUTER_ABI, readProvider);
+      const tokenAmount = ethers.parseEther(val);
+      const ethOut = await router.quoteChildToETH(tokenAddr, tokenAmount);
+      const formatted = parseFloat(ethers.formatEther(ethOut)).toLocaleString(undefined, { maximumFractionDigits: 6 });
+      quoteEl.innerHTML = 'You get ~<span>' + formatted + '</span> ETH';
+    } catch (e) {
+      quoteEl.innerHTML = '<span style="color:var(--crimson)">quote failed</span>';
+    }
+  });
+}
+
+// -- Buy --
+async function buyToken(tokenAddr) {
+  if (!signer) { alert('Connect wallet first.'); return; }
+  const input = document.getElementById('buy-input-' + tokenAddr);
+  const statusEl = document.getElementById('buy-status-' + tokenAddr);
+  const val = input.value.trim();
+  if (!val || Number(val) <= 0) { statusEl.innerHTML = '<span style="color:var(--crimson)">Enter ETH amount</span>'; return; }
+
+  const btn = document.getElementById('buy-btn-' + tokenAddr);
+  btn.disabled = true;
+  btn.textContent = 'Buying...';
+  statusEl.innerHTML = '<span style="color:var(--amber)">Sending transaction...</span>';
+
+  try {
+    const router = new ethers.Contract(CHILD_ROUTER_ADDR, CHILD_ROUTER_ABI, signer);
+    const ethAmount = ethers.parseEther(val);
+    const tx = await router.buyWithETH(tokenAddr, 0n, { value: ethAmount });
+    statusEl.innerHTML = '<a href="' + BASESCAN + '/tx/' + tx.hash + '" target="_blank">tx: ' + tx.hash.slice(0, 14) + '...</a>';
+    await tx.wait();
+    statusEl.innerHTML = '<span style="color:var(--green)">Buy confirmed!</span> <a href="' + BASESCAN + '/tx/' + tx.hash + '" target="_blank">view</a>';
+    input.value = '';
+    document.getElementById('buy-quote-' + tokenAddr).innerHTML = '';
+  } catch (e) {
+    const reason = e.reason || e.shortMessage || e.message || 'Failed';
+    statusEl.innerHTML = '<span style="color:var(--crimson)">' + reason + '</span>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Buy';
+  }
+}
+
+// -- Sell --
+async function sellToken(tokenAddr) {
+  if (!signer) { alert('Connect wallet first.'); return; }
+  const input = document.getElementById('sell-input-' + tokenAddr);
+  const statusEl = document.getElementById('sell-status-' + tokenAddr);
+  const val = input.value.trim();
+  if (!val || Number(val) <= 0) { statusEl.innerHTML = '<span style="color:var(--crimson)">Enter token amount</span>'; return; }
+
+  const btn = document.getElementById('sell-btn-' + tokenAddr);
+  btn.disabled = true;
+  btn.textContent = 'Selling...';
+  statusEl.innerHTML = '<span style="color:var(--amber)">Approving tokens...</span>';
+
+  try {
+    const tokenAmount = ethers.parseEther(val);
+
+    // Approve
+    const token = new ethers.Contract(tokenAddr, ERC20_APPROVE_ABI, signer);
+    const approveTx = await token.approve(CHILD_ROUTER_ADDR, tokenAmount);
+    statusEl.innerHTML = '<span style="color:var(--amber)">Waiting for approval...</span> <a href="' + BASESCAN + '/tx/' + approveTx.hash + '" target="_blank">tx</a>';
+    await approveTx.wait();
+
+    // Sell
+    statusEl.innerHTML = '<span style="color:var(--amber)">Selling tokens...</span>';
+    const router = new ethers.Contract(CHILD_ROUTER_ADDR, CHILD_ROUTER_ABI, signer);
+    const sellTx = await router.sellForETH(tokenAddr, tokenAmount, 0n);
+    statusEl.innerHTML = '<a href="' + BASESCAN + '/tx/' + sellTx.hash + '" target="_blank">tx: ' + sellTx.hash.slice(0, 14) + '...</a>';
+    await sellTx.wait();
+    statusEl.innerHTML = '<span style="color:var(--green)">Sell confirmed!</span> <a href="' + BASESCAN + '/tx/' + sellTx.hash + '" target="_blank">view</a>';
+    input.value = '';
+    document.getElementById('sell-quote-' + tokenAddr).innerHTML = '';
+  } catch (e) {
+    const reason = e.reason || e.shortMessage || e.message || 'Failed';
+    statusEl.innerHTML = '<span style="color:var(--crimson)">' + reason + '</span>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sell';
+  }
+}
+
+// -- Load Launches --
+async function loadLaunches() {
+  const body = document.getElementById('launchesBody');
+  try {
+    const readProvider = new ethers.JsonRpcProvider(BASE_RPC);
+    const factory = new ethers.Contract(FACTORY_ADDR, FACTORY_ABI, readProvider);
+    const total = await factory.totalLaunches();
+    const count = Number(total);
+
+    document.getElementById('launchCount').textContent = count + ' launched';
+
+    if (count === 0) {
+      body.innerHTML = '<div class="empty-state">No tokens launched yet. Be the first.</div>';
+      return;
+    }
+
+    // Fetch all in parallel
+    const promises = [];
+    for (let i = count - 1; i >= 0; i--) {
+      promises.push(factory.launches(i));
+    }
+    const launches = await Promise.all(promises);
+
+    let html = '<div class="token-cards">';
+
+    for (const l of launches) {
+      const token = l[0];
+      const pool = l[1];
+      const name = l[2];
+      const sym = l[3];
+      const obsdSeeded = parseFloat(ethers.formatEther(l[5])).toLocaleString(undefined, { maximumFractionDigits: 0 });
+      const date = new Date(Number(l[6]) * 1000).toLocaleDateString();
+
+      const shortToken = token.slice(0, 6) + '...' + token.slice(-4);
+      const shortPool = pool.slice(0, 6) + '...' + pool.slice(-4);
+
+      html += '<div class="token-card">';
+
+      // Header
+      html += '<div class="token-card-header">';
+      html += '<div><span class="token-card-name">' + name + '</span><span class="token-card-symbol">$' + sym + '</span></div>';
+      html += '<div class="token-card-links">';
+      html += '<a href="' + BASESCAN + '/address/' + token + '" target="_blank">token ' + shortToken + '</a>';
+      html += '<a href="' + BASESCAN + '/address/' + pool + '" target="_blank">pool ' + shortPool + '</a>';
+      html += '</div></div>';
+
+      // Meta
+      html += '<div class="token-card-meta">';
+      html += 'OBSD Seeded: <span>' + obsdSeeded + '</span>';
+      html += 'Launched: ' + date;
+      html += '</div>';
+
+      // Trade Row
+      html += '<div class="trade-row">';
+
+      // Buy Box
+      html += '<div class="trade-box">';
+      html += '<div class="trade-box-title buy-title">Buy with ETH</div>';
+      html += '<div class="trade-input-row">';
+      html += '<input type="number" class="trade-input" id="buy-input-' + token + '" placeholder="0.001" step="0.0001" min="0" oninput="fetchBuyQuote(\'' + token + '\', this)">';
+      html += '<button class="btn btn-sm btn-buy" id="buy-btn-' + token + '" onclick="buyToken(\'' + token + '\')">Buy</button>';
+      html += '</div>';
+      html += '<div class="trade-quote" id="buy-quote-' + token + '"></div>';
+      html += '<div class="trade-status" id="buy-status-' + token + '"></div>';
+      html += '</div>';
+
+      // Sell Box
+      html += '<div class="trade-box">';
+      html += '<div class="trade-box-title sell-title">Sell for ETH</div>';
+      html += '<div class="trade-input-row">';
+      html += '<input type="number" class="trade-input" id="sell-input-' + token + '" placeholder="1000" step="1" min="0" oninput="fetchSellQuote(\'' + token + '\', this)">';
+      html += '<button class="btn btn-sm btn-sell" id="sell-btn-' + token + '" onclick="sellToken(\'' + token + '\')">Sell</button>';
+      html += '</div>';
+      html += '<div class="trade-quote" id="sell-quote-' + token + '"></div>';
+      html += '<div class="trade-status" id="sell-status-' + token + '"></div>';
+      html += '</div>';
+
+      html += '</div>'; // trade-row
+      html += '</div>'; // token-card
+    }
+
+    html += '</div>';
+    body.innerHTML = html;
+
+  } catch (e) {
+    console.error('Failed to load launches:', e);
+    body.innerHTML = '<div class="empty-state" style="color:var(--crimson)">Failed to load launches.</div>';
+  }
+}
+
+// -- Listen for account/chain changes --
+if (window.ethereum) {
+  window.ethereum.on('accountsChanged', () => location.reload());
+  window.ethereum.on('chainChanged', () => location.reload());
+}
+
+// -- Init: load launches with read-only provider --
+loadLaunches();
+</script>
+</body>
+</html>

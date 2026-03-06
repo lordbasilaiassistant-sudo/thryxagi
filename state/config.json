@@ -11,6 +11,46 @@
     "router": "0x2558F30eDB8098861FEf81c8E194ac9DcF714b0E",
     "aeroPool": "0x5c1db3247c989eA36Cfd1dd435ed3085287b52ac"
   },
+  "factory": {
+    "address": "0xb696F67394609A6C176Ade745721Fd81b1650776",
+    "defaultObsdSeed": "10000000000000000000000",
+    "defaultPoolPercent": 80
+  },
+  "childRouter": {
+    "address": "0xCb7a49CE25093f06028003D51aBc47fBE32875de",
+    "note": "ETH-in/ETH-out meta-router for plain child tokens (v1)"
+  },
+  "launchPadV1": {
+    "address": "0xdF7db891cDb4D80aE4199e4E2b23861F51c62F2a",
+    "note": "DEPRECATED — deployed CreatorToken v1 (flat 3% fee, no burn, no sell tax)"
+  },
+  "launchPad": {
+    "address": "0xFD8F5C2DAb7C5F2954ba43c0ae85BF94601C06C1",
+    "note": "Creator Economy factory v2 — deploys CreatorTokenV2 with burn + progressive sell tax + IV vault"
+  },
+  "platformRouter": {
+    "address": "0x29b41D0FaE0ac1491001909E340D0BA58B28a701",
+    "note": "ETH-in/ETH-out with 0.5% ETH platform fee, for CreatorTokens"
+  },
+  "stakingVault": {
+    "address": "0xA2E0295d07d9D03B51b122a0C307054fE69e31C2",
+    "note": "Lock OBSD, earn pro-rata share of platform fees via magnified dividends"
+  },
+  "feeAggregator": {
+    "address": "0x96F955763D40A042ACBEE85A8bc89DceEa8c5163",
+    "note": "Harvests LP fees from Aerodrome pools, swaps to OBSD, feeds StakingVault"
+  },
+  "referralRegistry": {
+    "address": "0x6e0D304a2b99d31115342B034c24906f57aa7B0c",
+    "note": "On-chain referral tracking — referrers earn 5% of creator OBSD fees"
+  },
+  "moltbook": {
+    "agentName": "thryx",
+    "profileUrl": "https://www.moltbook.com/u/thryx",
+    "apiBase": "https://www.moltbook.com/api/v1",
+    "status": "pending_claim",
+    "note": "Claim URL sent to drlor. Post verification tweet to activate."
+  },
   "foundryBin": "/c/Users/drlor/.foundry/bin",
   "apis": {
     "geckoBase": "https://api.geckoterminal.com/api/v2",

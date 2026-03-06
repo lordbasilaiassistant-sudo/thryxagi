@@ -6,5 +6,26 @@
     "pumpfunAccount": "thryx"
   },
   "rotation": [],
-  "agents": {}
+  "agents": {
+    "nova": {
+      "address": "0xd70F76F9a6368FD870734CdF4EfD7f9aDED131D4",
+      "registered": "2026-03-06"
+    },
+    "blaze": {
+      "address": "0x2673B60BcdBB240B796b8C773F4b7f83994c02b0",
+      "registered": "2026-03-06"
+    },
+    "sage": {
+      "address": "0x72711779E57e89884c84e6a8ecb8429BA14Cf802",
+      "registered": "2026-03-06"
+    },
+    "forge": {
+      "address": "0x935BfeEbA68BEcf26Ec8640FEDb164b69946ccC5",
+      "registered": "2026-03-06"
+    },
+    "nexus": {
+      "address": "0x5461d543cb5dBb51af1517362AB1d8A85c868287",
+      "registered": "2026-03-06"
+    }
+  }
 }

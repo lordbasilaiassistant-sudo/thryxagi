@@ -291,6 +291,15 @@ forge test --gas-report                 # Gas optimization
 
 ---
 
+## Agent Workflow Rules
+
+- **NEVER shut down agents** — if an agent finishes a task, assign the next one. Agents should always be working.
+- **drlor does NO manual tasks** — everything must be fully autonomous
+- **Autoclaiming everywhere** — all fees, payouts, distributions must be push-pattern (no manual claiming)
+- **50/50 profit split** — all revenue splits equally between treasury and builders/creators
+- **Payouts in OBSD only** for creators — treasury gets both ETH and OBSD
+- **Never waste gas** — only spend on revenue-generating actions
+
 ## Critical Rules
 
 - **IMPORTANT:** Never expose `THRYXTREASURY_PRIVATE_KEY` in code, commits, or logs

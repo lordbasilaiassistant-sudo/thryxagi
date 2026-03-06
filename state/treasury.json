@@ -1,12 +1,59 @@
 {
-  "lastUpdated": "2026-03-06",
-  "ethBalance": "0.000247739853885768",
-  "obsdHoldings": "4315622",
-  "obsdRealEth": "0.004452",
-  "totalRevenue": "0.000048",
-  "stage": 0,
-  "payroll": {
-    "totalDistributed": "0",
-    "lastPayroll": null
+  "lastUpdated": "2026-03-06T23:00:00Z",
+  "session": 3,
+
+  "deployerWallet": {
+    "address": "0x7a3E312Ec6e20a9F62fE2405938EB9060312E334",
+    "ethBalance": "0.001675798462975062",
+    "obsdBalance": "2187169.89"
+  },
+
+  "obsdRouter": {
+    "address": "0x2558F30eDB8098861FEf81c8E194ac9DcF714b0E",
+    "phase": 1,
+    "tier": 1,
+    "realETH": "0.004452",
+    "contractETH": "0.004457",
+    "pendingCreatorFees": "0",
+    "vETH": "0.504752",
+    "vTOK": "990585475.64",
+    "spotPrice_raw": "509549163",
+    "totalSupply": "999811709.51",
+    "circSupply_estimated": "9226233.87"
+  },
+
+  "aeroPool": {
+    "address": "0x5c1db3247c989eA36Cfd1dd435ed3085287b52ac",
+    "obsdBalance": "1055690.69",
+    "ethBalance": "0"
+  },
+
+  "agentWallets": {
+    "nova":  { "address": "0xd70F76F9a6368FD870734CdF4EfD7f9aDED131D4", "obsd": "100000" },
+    "blaze": { "address": "0x2673B60BcdBB240B796b8C773F4b7f83994c02b0", "obsd": "100000" },
+    "sage":  { "address": "0x72711779E57e89884c84e6a8ecb8429BA14Cf802", "obsd": "100000" },
+    "forge": { "address": "0x935BfeEbA68BEcf26Ec8640FEDb164b69946ccC5", "obsd": "100000" },
+    "nexus": { "address": "0x5461d543cb5dBb51af1517362AB1d8A85c868287", "obsd": "100000" }
+  },
+
+  "childPools": {
+    "WORK": { "pool": "0x37EF452c4ee8837b4BFfb4A67D85cBa6B8b6429B", "obsdSeeded": "500000", "ethBalance": "0", "claimableFees": "0" },
+    "HIRE": { "pool": "0x1bb0C052C8bb45637450df94768ff024967090Be", "obsdSeeded": "500000", "ethBalance": "0", "claimableFees": "0" },
+    "APAY": { "pool": "0x8aA4862c3f15156981D42832D3596FA1DDc913B9", "obsdSeeded": "400000", "ethBalance": "0", "claimableFees": "0" },
+    "BOTS": { "pool": "0xaf274E1f99c7fBbE1d8DfDf5e3f8696fEdF89a08", "obsdSeeded": "400000", "ethBalance": "0", "claimableFees": "0" },
+    "COMP": { "pool": "0x2E795Cf493Ad4bEdcd00706D52897f48B0Ac69e9", "obsdSeeded": "400000", "ethBalance": "0", "claimableFees": "0" }
+  },
+
+  "summary": {
+    "totalETH_deployer": "0.001676",
+    "totalETH_treasury": "0.004452",
+    "totalETH_all": "0.006128",
+    "totalOBSD_agents": "500000",
+    "totalOBSD_childPools": "2200000",
+    "totalOBSD_aeroPool": "1055690",
+    "totalOBSD_deployer": "2187170",
+    "totalRevenueClaimed": "0.000048",
+    "pendingFees": "0",
+    "notes": "No pending fees to claim. All 5 child pools have zero ETH and zero claimable LP fees (no trades yet). Aero pool has OBSD but zero ETH. Treasury is 89% to Tier 2 threshold (0.005 ETH)."
   }
 }
