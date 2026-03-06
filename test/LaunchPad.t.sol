@@ -81,9 +81,14 @@ contract LaunchPadTest is Test {
         (address token,) = pad.launch("Fee Test", "FEET", supply, obsdSeed, 80, creator);
         vm.stopPrank();
 
-        // Give alice some tokens to test transfers (via deal since creator has 0)
+        // Give alice some tokens via deal and update circulating counter
         uint256 transferAmt = 1_000_000e18;
         deal(token, alice, transferAmt);
+        // deal() bypasses _update so circulating is stale — fix it
+        // circulating slot: use stdstore to update
+        uint256 circulatingSlot = 11; // storage slot from forge inspect
+        bytes32 currentCirc = vm.load(token, bytes32(uint256(circulatingSlot)));
+        vm.store(token, bytes32(uint256(circulatingSlot)), bytes32(uint256(currentCirc) + transferAmt));
 
         uint256 supplyBefore = IERC20(token).totalSupply();
 

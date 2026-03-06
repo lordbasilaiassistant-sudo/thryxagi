@@ -5,6 +5,8 @@
 platform="${1:-}"
 shift || true
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 deploy_bankr() {
   local name="${1:-}"
   local ticker="${2:-}"
@@ -14,6 +16,11 @@ deploy_bankr() {
     echo "Example: ./thryx deploy bankr 'Agentic Mind' AMIND"
     exit 1
   fi
+
+  # Security audit gate
+  echo "Running pre-deploy security audit..."
+  source "$SCRIPT_DIR/audit.sh" secrets 2>/dev/null
+  echo ""
 
   # Check ticker uniqueness
   if ticker_exists "$ticker"; then

@@ -11,6 +11,16 @@ if [ -z "$name" ] || [ -z "$ticker" ]; then
   exit 1
 fi
 
+# Security audit gate — runs before any on-chain action
+echo "Running pre-deploy security audit..."
+source "$SCRIPT_DIR/audit.sh" deploy 2>/dev/null
+audit_result=$?
+if [ "$audit_result" -ne 0 ]; then
+  echo "BLOCKED: Security audit failed. Fix issues before deploying."
+  exit 1
+fi
+echo ""
+
 # Check ticker uniqueness
 if ticker_exists "$ticker"; then
   echo "ERROR: Ticker $ticker already exists in state/tokens.json"
