@@ -50,7 +50,9 @@ obsd_claim_fees() {
 
 eth_to_human() {
   # Convert wei string to ETH with 6 decimals
-  local wei="$1"
+  # cast output can include scientific notation suffix like "4452000000000000 [4.452e15]"
+  local wei
+  wei=$(echo "$1" | awk '{print $1}')
   python3 -c "print(f'{int(\"$wei\") / 1e18:.6f}')"
 }
 

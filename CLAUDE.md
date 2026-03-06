@@ -255,33 +255,38 @@ uint256 constant SELL_COOLDOWN          = 5 minutes;  // Between sells
 
 ---
 
-## Commands
+## Agent Operations — thryx CLI
+
+All recurring workflows are codified as `./thryx` commands. Agents MUST use these instead of manual cast/forge/API calls. Run `./thryx status` first every session.
 
 ```bash
-# Build
-forge build
+./thryx status                          # Full dashboard (RUN THIS FIRST every session)
+./thryx deploy bankr <name> <ticker>    # Deploy token + validation + state tracking
+./thryx deploy register <platform> <addr> <name> <ticker>  # Register after MCP deploy
+./thryx claim all                       # Claim all fees across all platforms
+./thryx claim obsd                      # Claim OBSD router fees
+./thryx tweet "<text>"                  # Post tweet
+./thryx tweet next                      # Post next from queue
+./thryx analytics pull                  # Pull market data from DexScreener
+./thryx treasury                        # Treasury snapshot with on-chain data
+./thryx wallet balance                  # All wallet balances
+./thryx wallet new                      # Create rotation wallet
+./thryx payroll status                  # Agent wallet balances + OBSD fund
+./thryx payroll add <name> <addr>       # Register agent wallet for payroll
+./thryx payroll run [amount_wei]        # Distribute OBSD to all agent wallets
+./thryx gen-ops                         # Regenerate ops/ markdown from state/ JSON
+./thryx help                            # Full command list
+```
 
-# Test (all)
-forge test -vvv
+State lives in `state/*.json` (tokens, wallets, treasury, tweets, analytics, config).
+Never edit `ops/*.md` directly — run `./thryx gen-ops` to regenerate from JSON.
 
-# Test specific
-forge test --match-test testIVNeverDecreases -vvv
-
-# Fork test against Base
-forge test --fork-url https://mainnet.base.org -vvv
-
-# Deploy (local)
-anvil --fork-url https://mainnet.base.org
-forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast
-
-# Deploy (mainnet) — ONLY when ready
-forge script script/Deploy.s.sol --rpc-url https://mainnet.base.org --broadcast --verify
-
-# Python simulation
-python math/model.py
-
-# Gas report
-forge test --gas-report
+### Foundry Commands (for contract development only)
+```bash
+forge build                             # Build contracts
+forge test -vvv                         # Run all tests
+forge test --match-test testName -vvv   # Run specific test
+forge test --gas-report                 # Gas optimization
 ```
 
 ---
@@ -314,6 +319,46 @@ forge test --gas-report
 - **Progressive tax** — Sell tax that decays from 25% to 1% based on hold duration
 - **Creator fee** — 1% ETH extracted from each trade, sent to deployer wallet
 - **One-way curve** — Buys move the curve; sells bypass it entirely
+
+## DEX Router Intelligence (Base Mainnet — Researched March 2026)
+
+### Where the Volume Actually Is (Base Chain)
+1. **Aerodrome** — #1 DEX on Base by far. $500M+ daily volume. SlipStream AMM. This is where Base whales trade.
+   - Source: https://bingx.com/en/learn/article/what-are-the-top-decentralized-exchanges-dexs-to-know
+   - Base contributes ~50% of Aerodrome revenue
+2. **Uniswap V4** — 30% of all Uniswap trades globally. $110B+ total volume since launch. $501M TVL on Base pools.
+   - Source: https://coinlaw.io/uniswap-statistics/
+   - Source: https://dexanalytics.org/metrics/v4
+   - 67% of V4 volume is on L2s (Base, Arbitrum, etc.)
+   - $1B TVL in 177 days (faster than V3 adoption)
+   - BlackRock buying UNI — institutional signal: https://www.okx.com/en-ae/learn/uniswap-v4-whale-activity-defi-scalability
+3. **Uniswap V3** — Still handles 60% of Uniswap trades. Mature, well-indexed.
+4. **Uniswap V2** — Legacy. Minimal volume. NOT where whales or bots actively trade anymore.
+
+### Scanner/Bot Compatibility
+- **GoPlus**: Fully supports V4 as of May 2025. SafeToken Locker v4 launched with V4 pool support.
+  - Source: https://coinfomania.com/goplus-safetoken-locker-introduces-full-support-for-uniswap-v4-pools-offering-improved-gas-efficiency-and-flexible-locking-periods/
+  - GoPlus Token Security API: 717M monthly calls avg in 2025, peaked at ~1B in Feb 2025
+  - Source: https://messari.io/report/state-of-goplus-q2-2025
+- **DexScreener**: Tracks 80+ DEXs across 25+ chains including Uniswap on Base. V4-specific support unconfirmed but likely given adoption.
+  - Source: https://listing.help/dexscreener-listing-requirements/
+- **V4 Hooks concern**: Hooks expand attack surface (Hacken, Cyfrin, CertiK all document risks). Scanners must evaluate hook contracts per-pool. Using NO hooks (default pool) = cleanest signal.
+  - Source: https://hacken.io/discover/auditing-uniswap-v4-hooks/
+  - Source: https://www.cyfrin.io/blog/uniswap-v4-hooks-security-deep-dive
+
+### Graduation Target Recommendation
+- **Primary**: Aerodrome (Base-native whale liquidity)
+- **Secondary**: Uniswap V4 (institutional flow, cross-chain credibility)
+- **Avoid**: Uniswap V2 (dead volume, graduating into an empty room)
+- **Key insight**: A V4 pool with NO hooks is as clean as V2 to scanners, but lives where the volume is.
+
+### Known Router Addresses (Base Mainnet)
+- Uniswap V2 Router: `0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24`
+- Uniswap V4 PoolManager: verify on-chain before deploy (singleton architecture, not a router)
+- Aerodrome Router: verify on-chain before deploy (Ve(3,3) model)
+- WETH (Base): `0x4200000000000000000000000000000000000006`
+
+---
 
 ## Reference Documents
 - For detailed v3 math proofs: see `memory/tokenomics-math.md`

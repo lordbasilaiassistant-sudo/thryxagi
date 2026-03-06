@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+THRYX_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMMANDS_DIR="$THRYX_ROOT/scripts/commands"
+
+# Source shared libs (config.sh sets PROJECT_ROOT, STATE_DIR, etc.)
+. "$THRYX_ROOT/scripts/lib/config.sh"
+. "$THRYX_ROOT/scripts/lib/state.sh"
+. "$THRYX_ROOT/scripts/lib/chain.sh"
+
+usage() {
+  cat <<EOF
+thryx — THRYXAGI Agent Automation CLI
+
+COMMANDS:
+  status                          Full dashboard: balances, tokens, fees, stage
+  deploy bankr <name> <ticker>    Deploy token on Bankr, update state, queue tweet
+  deploy register <platform> <address> <name> <ticker>
+                                  Register a deployed token in state
+  claim all                       Claim fees across all platforms
+  claim obsd                      Claim OBSD router fees
+  tweet <text>                    Post a tweet
+  tweet next                      Post next tweet from queue
+  analytics pull                  Pull volume/price data for all tokens
+  treasury                        Treasury snapshot
+  wallet balance                  Check all wallet balances
+  wallet new                      Create and register a rotation wallet
+  payroll status                  Show agent wallet balances
+  payroll add <name> <address>    Register an agent wallet
+  payroll run [amount]            Distribute OBSD to agent wallets
+  gen-ops                         Regenerate ops/ markdown from state/
+  help                            Show this help
+
+EXAMPLES:
+  ./thryx status
+  ./thryx claim obsd
+  ./thryx tweet "gm builders"
+  ./thryx deploy bankr "Agentic Mind" AMIND
+  ./thryx payroll add nova 0x1234...5678
+  ./thryx payroll run 1000000000000000000
+EOF
+}
+
+cmd="${1:-help}"
+shift || true
+
+case "$cmd" in
+  status)       . "$COMMANDS_DIR/status.sh" ;;
+  deploy)       . "$COMMANDS_DIR/deploy.sh" "$@" ;;
+  claim)        . "$COMMANDS_DIR/claim.sh" "$@" ;;
+  tweet)        . "$COMMANDS_DIR/tweet.sh" "$@" ;;
+  analytics)    . "$COMMANDS_DIR/analytics.sh" "$@" ;;
+  treasury)     . "$COMMANDS_DIR/treasury.sh" ;;
+  wallet)       . "$COMMANDS_DIR/wallet.sh" "$@" ;;
+  payroll)      . "$COMMANDS_DIR/payroll.sh" "$@" ;;
+  gen-ops)      . "$COMMANDS_DIR/gen-ops.sh" ;;
+  help|--help)  usage ;;
+  *)            echo "Unknown command: $cmd"; usage; exit 1 ;;
+esac
