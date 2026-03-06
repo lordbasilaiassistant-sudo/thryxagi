@@ -217,7 +217,15 @@ contract CreatorTokenV2 is ERC20 {
         _inSwap = true;
 
         uint256 amount = pendingFees;
-        pendingFees = 0;
+
+        // Cap swap to 30% of pool's token reserve to avoid exceeding pool depth
+        uint256 poolBalance = balanceOf(pool);
+        uint256 maxSwap = (poolBalance * 30) / 100;
+        if (maxSwap > 0 && amount > maxSwap) {
+            amount = maxSwap;
+        }
+
+        pendingFees -= amount; // keep remainder for next distribute
 
         IAeroRouterV2.Route[] memory routes = new IAeroRouterV2.Route[](1);
         routes[0] = IAeroRouterV2.Route({
@@ -248,8 +256,8 @@ contract CreatorTokenV2 is ERC20 {
 
             emit FeesDistributed(creatorShare, treasuryShare, vaultShare);
         } catch {
-            // Pool has no liquidity yet — hold fees for next attempt
-            pendingFees = amount;
+            // Swap failed — return tokens to pendingFees for next attempt
+            pendingFees += amount;
         }
 
         _inSwap = false;
