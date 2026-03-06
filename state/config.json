@@ -24,9 +24,13 @@
     "address": "0xdF7db891cDb4D80aE4199e4E2b23861F51c62F2a",
     "note": "DEPRECATED — deployed CreatorToken v1 (flat 3% fee, no burn, no sell tax)"
   },
-  "launchPad": {
+  "launchPadV2": {
     "address": "0xFD8F5C2DAb7C5F2954ba43c0ae85BF94601C06C1",
-    "note": "Creator Economy factory v2 — deploys CreatorTokenV2 with burn + progressive sell tax + IV vault"
+    "note": "DEPRECATED — CreatorTokenV2 without pool-depth cap (auto-distribute can fail)"
+  },
+  "launchPad": {
+    "address": "0xb8f4ad2f78387396b170052888021E545D93845B",
+    "note": "Creator Economy factory v3 — CreatorTokenV2 with pool-depth capped auto-distribute"
   },
   "platformRouter": {
     "address": "0x29b41D0FaE0ac1491001909E340D0BA58B28a701",
